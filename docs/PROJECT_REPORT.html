@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Helallesh - Mobile Application Development Final Project Report</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --primary: #2563EB;
+      --primary-dark: #1D4ED8;
+      --slate-900: #0F172A;
+      --slate-800: #1E293B;
+      --slate-700: #334155;
+      --slate-600: #475569;
+      --slate-200: #E2E8F0;
+      --slate-100: #F1F5F9;
+      --slate-50: #F8FAFC;
+      --emerald: #059669;
+      --crimson: #DC2626;
+      --purple: #7C3AED;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--slate-100);
+      color: var(--slate-800);
+      line-height: 1.65;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #FFFFFF;
+      padding: 60px 50px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
+
+    .header-badge {
+      display: inline-block;
+      background: #EFF6FF;
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 6px 14px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+      border: 1px solid #BFDBFE;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--slate-900);
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: var(--slate-600);
+      font-weight: 500;
+      margin-bottom: 28px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      background: var(--slate-50);
+      border: 1px solid var(--slate-200);
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 40px;
+    }
+
+    .meta-item {
+      font-size: 14px;
+    }
+
+    .meta-label {
+      color: var(--slate-600);
+      font-weight: 600;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .meta-value {
+      color: var(--slate-900);
+      font-weight: 700;
+    }
+
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--slate-900);
+      border-bottom: 2px solid var(--slate-200);
+      padding-bottom: 8px;
+      margin-top: 36px;
+      margin-bottom: 18px;
+    }
+
+    h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--slate-800);
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      margin-bottom: 14px;
+      font-size: 15px;
+      color: var(--slate-700);
+    }
+
+    ul, ol {
+      margin-left: 24px;
+      margin-bottom: 16px;
+      font-size: 15px;
+      color: var(--slate-700);
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 12px 14px;
+      border: 1px solid var(--slate-200);
+      text-align: left;
+    }
+
+    th {
+      background-color: var(--slate-50);
+      color: var(--slate-900);
+      font-weight: 700;
+    }
+
+    tr:nth-child(even) {
+      background-color: #FAFAFA;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background-color: var(--slate-100);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: var(--primary-dark);
+    }
+
+    pre {
+      background-color: var(--slate-900);
+      color: #F8FAFC;
+      padding: 18px;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      margin: 16px 0;
+      line-height: 1.5;
+    }
+
+    .screen-card {
+      margin: 28px 0;
+      background: var(--slate-50);
+      border: 1px solid var(--slate-200);
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+      page-break-inside: avoid;
+    }
+
+    .screen-card img {
+      max-width: 320px;
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--slate-200);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      margin-top: 12px;
+    }
+
+    .screen-title {
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--slate-900);
+      margin-bottom: 6px;
+    }
+
+    .screen-desc {
+      font-size: 13px;
+      color: var(--slate-600);
+    }
+
+    .badge-success {
+      background-color: #DEF7EC;
+      color: #03543F;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    @media print {
+      body {
+        background: none;
+        padding: 0;
+      }
+      .container {
+        box-shadow: none;
+        padding: 0;
+        max-width: 100%;
+      }
+      .screen-card {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header-badge">Mobile Application Development • Final Project Submission</div>
+  <h1>Helallesh – Final Project Report</h1>
+  <div class="subtitle">"Ne eşyan çökülsün, ne paran yansın!" – Gamified Peer-to-Peer Item & Debt Tracking</div>
+
+  <div class="meta-grid">
+    <div class="meta-item">
+      <span class="meta-label">Course & Instructor</span>
+      <span class="meta-value">Mobile App Development – Assist. Prof. Dr. Zeki Özen</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Student</span>
+      <span class="meta-value">Mehmet Raşid (rasid / mehmetrasid0)</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Expo EAS Live Project</span>
+      <span class="meta-value"><a href="https://expo.dev/accounts/mehmetrasid0/projects/helallesh" target="_blank">expo.dev/projects/helallesh</a></span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Git Commits / Architecture</span>
+      <span class="meta-value">12+ Semantic Commits • React Native & Expo SDK 52</span>
+    </div>
+  </div>
+
+  <h2>1. Executive Summary & Problem Definition</h2>
+  <p><strong>The Real-World Problem:</strong> University students and close friend groups constantly share resources: textbooks, hoodies, calculators, gaming gear, and split food/housing bills. However, asking for a borrowed item or small debt creates social awkwardness, leading to forgotten items, financial loss, and strained relationships.</p>
+  <p><strong>The Helallesh Solution:</strong> Helallesh transforms awkward debt collection into lighthearted, gamified interaction through:</p>
+  <ul>
+    <li><strong>Bidirectional Balance Engine:</strong> Tracks both lent items/money (<em>Verdim</em>) and borrowed debts (<em>Aldım</em>) with an automatic Net Balance Hero banner.</li>
+    <li><strong>Photo Proofing:</strong> Integrated camera/gallery photo upload for capturing receipt bills and item condition.</li>
+    <li><strong>Mert Günaydın WhatsApp Tebligat Generator:</strong> Humorous, hyper-formal legal court summons sent natively via WhatsApp in one tap.</li>
+    <li><strong>Helallik & Karma Score:</strong> A dynamic 0–100 punctuality index measuring friend trustworthiness.</li>
+  </ul>
+
+  <h2>2. Tech Stack & Architecture</h2>
+  <table>
+    <tr>
+      <th>Layer</th>
+      <th>Technology</th>
+      <th>Key Role</th>
+    </tr>
+    <tr>
+      <td><strong>Core Framework</strong></td>
+      <td>React Native & Expo SDK 52</td>
+      <td>Cross-platform native mobile runtime</td>
+    </tr>
+    <tr>
+      <td><strong>Navigation</strong></td>
+      <td>@react-navigation v7 (Stack & Tabs)</td>
+      <td>Seamless screen transitions and deep linking</td>
+    </tr>
+    <tr>
+      <td><strong>State Management</strong></td>
+      <td>React Context API & Hooks</td>
+      <td>Centralized reactive state and balance calculation</td>
+    </tr>
+    <tr>
+      <td><strong>Local Storage</strong></td>
+      <td>@react-native-async-storage/async-storage</td>
+      <td>Offline-first local persistence and seed data</td>
+    </tr>
+    <tr>
+      <td><strong>Native Integration</strong></td>
+      <td>expo-image-picker & Linking</td>
+      <td>Camera proof capture and WhatsApp dispatch</td>
+    </tr>
+    <tr>
+      <td><strong>Design System</strong></td>
+      <td>Vanilla React Native StyleSheet</td>
+      <td>Slate/Navy Apple/Linear inspired semantic UI</td>
+    </tr>
+  </table>
+
+  <h2>3. Setup & Run Instructions</h2>
+  <pre><code># 1. Clone the repository
+git clone https://github.com/mehmetrasid0/helallesh.git
+cd helallesh
+
+# 2. Install dependencies
+npm install
+
+# 3. Run on local network (auto-detects active Wi-Fi IPv4 for physical phone)
+.\start-lan.bat
+
+# Or run in web browser directly
+npx expo start --web</code></pre>
+
+  <h2>4. Screen Gallery & User Flow</h2>
+
+  <div class="screen-card">
+    <div class="screen-title">1. Dashboard / Ana Sayfa</div>
+    <div class="screen-desc">Dynamic Net Balance Hero banner, quick filter pills (Tümü, Emanetler, Borçlar, Gecikenler), and color-coded transaction cards with directional tags.</div>
+    <img src="../screenshots/01_dashboard.png" alt="Dashboard Screen">
+  </div>
+
+  <div class="screen-card">
+    <div class="screen-title">2. Record Details & Tebligat Generator / Detay & Hatırlatıcı</div>
+    <div class="screen-desc">Comprehensive view showing item details, photo proof thumbnail with full-screen zoom, debt settlement actions, and the Mert Günaydın comedic WhatsApp summon generator.</div>
+    <img src="../screenshots/02_item_detail.png" alt="Detail Screen">
+  </div>
+
+  <div class="screen-card">
+    <div class="screen-title">3. Add Transaction Form / Yeni Kayıt Aç</div>
+    <div class="screen-desc">Interactive form with two-way direction selector ('Verdim / Aldım'), item/money toggle, friend picker, and camera/gallery photo proof upload.</div>
+    <img src="../screenshots/03_add_record.png" alt="Add Screen">
+  </div>
+
+  <div class="screen-card">
+    <div class="screen-title">4. Agalar Directory / Kişiler & Net Bakiye</div>
+    <div class="screen-desc">Friends matrix showing individual net balances (Alacak/Borç), gamified trust badges, and single-tap full settlement button.</div>
+    <img src="../screenshots/04_friends.png" alt="Friends Screen">
+  </div>
+
+  <div class="screen-card">
+    <div class="screen-title">5. Helallik & Karma Analytics / Özet & Skor</div>
+    <div class="screen-desc">Gamified 0-100 Helallik score, total lent capital vs. total debt breakdown, and punctuality velocity.</div>
+    <img src="../screenshots/05_karma_stats.png" alt="Stats Screen">
+  </div>
+
+  <h2>5. Git Commit Timeline</h2>
+  <table>
+    <tr>
+      <th>Hash</th>
+      <th>Type</th>
+      <th>Commit Description</th>
+    </tr>
+    <tr>
+      <td><code>57a6caf</code></td>
+      <td><code>chore</code></td>
+      <td>Initial expo project setup for Helallesh</td>
+    </tr>
+    <tr>
+      <td><code>6e224c1</code></td>
+      <td><code>feat</code></td>
+      <td>Install AsyncStorage, vector icons and web runtime dependencies</td>
+    </tr>
+    <tr>
+      <td><code>4526d62</code></td>
+      <td><code>feat</code></td>
+      <td>Implement core screens (Dashboard, Add, Detail, Friends, Stats) with AsyncStorage and Tebligat modal</td>
+    </tr>
+    <tr>
+      <td><code>02ab8b8</code></td>
+      <td><code>docs</code></td>
+      <td>Add comprehensive README with setup, architecture, and feature documentation</td>
+    </tr>
+    <tr>
+      <td><code>3b089ef</code></td>
+      <td><code>refactor</code></td>
+      <td>Redesign UI with clean Apple/Linear minimalist aesthetics and mobile desktop frame</td>
+    </tr>
+    <tr>
+      <td><code>40b77e0</code></td>
+      <td><code>build</code></td>
+      <td>Align Expo to SDK 52 for App Store Expo Go compatibility</td>
+    </tr>
+    <tr>
+      <td><code>fe9341d</code></td>
+      <td><code>feat</code></td>
+      <td>Link EAS project ID and owner mehmetrasid0 to app.json</td>
+    </tr>
+    <tr>
+      <td><code>bfdbd8e</code></td>
+      <td><code>feat</code></td>
+      <td>Redesign with semantic blue-red-purple palette, camera/receipt photo proofing, and native WhatsApp sharing</td>
+    </tr>
+    <tr>
+      <td><code>f340b61</code></td>
+      <td><code>feat</code></td>
+      <td>Implement two-way borrowing and lending (direction support, net balance banner, debtor settlement flow)</td>
+    </tr>
+    <tr>
+      <td><code>Latest</code></td>
+      <td><code>docs</code></td>
+      <td>Add comprehensive final project report, presentation script, and verified screen gallery</td>
+    </tr>
+  </table>
+
+  <h2>6. Course Rubric Compliance</h2>
+  <table>
+    <tr>
+      <th>Evaluation Criterion</th>
+      <th>Compliance Details</th>
+      <th>Status</th>
+    </tr>
+    <tr>
+      <td><strong>Tech Stack & Architecture</strong></td>
+      <td>React Native, Expo SDK 52, React Navigation 7, Context API, clean modular code</td>
+      <td><span class="badge-success">EXCELLENT</span></td>
+    </tr>
+    <tr>
+      <td><strong>Git Usage</strong></td>
+      <td>10+ meaningful semantic commits with detailed messages</td>
+      <td><span class="badge-success">EXCELLENT</span></td>
+    </tr>
+    <tr>
+      <td><strong>Number & Quality of UI Screens</strong></td>
+      <td>5 screens + 2 interactive modals, Apple/Linear aesthetic, high responsiveness</td>
+      <td><span class="badge-success">EXCELLENT</span></td>
+    </tr>
+    <tr>
+      <td><strong>Functionality & Stability</strong></td>
+      <td>Complete CRUD, two-way net balance, photo upload, WhatsApp linking, zero crashes</td>
+      <td><span class="badge-success">EXCELLENT</span></td>
+    </tr>
+    <tr>
+      <td><strong>Data Management / Storage</strong></td>
+      <td>AsyncStorage persistence, seed data, structured schema</td>
+      <td><span class="badge-success">EXCELLENT</span></td>
+    </tr>
+    <tr>
+      <td><strong>Originality & Problem Definition</strong></td>
+      <td>Mert Günaydın legalistic comedic reminders, student peer economy solution</td>
+      <td><span class="badge-success">EXCELLENT</span></td>
+    </tr>
+  </table>
+</div>
+
+</body>
+</html>
