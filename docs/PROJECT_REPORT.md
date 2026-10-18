@@ -29,7 +29,7 @@ In university life and tight-knit social circles, sharing resources is daily rou
 **Helallesh** eliminates social tension through **comedy and gamified peer accountability**:
 - **Bidirectional Tracking:** Full support for both *Verdim (Alacaklıyım)* and *Aldım (Borçluyum)* with an automatic **Net Balance Hero Banner**.
 - **Photo Proofing:** Camera and gallery integration (`expo-image-picker`) to attach receipt photos for bill splits or condition photos for physical items.
-- **Mert Günaydın Comedic Tebligat Generator:** Generates humorous, hyper-formal legal court summons ("İcra Tebligatı", "Haciz İhbarnamesi", "Dost Meclisi İhtarı") sent natively via **WhatsApp** in one tap.
+- **Helallesh Legal Humor & Tebligat Generator:** Generates humorous, hyper-formal legal court summons ("İcra Tebligatı", "Haciz İhbarnamesi", "Dost Meclisi İhtarı") sent natively via **WhatsApp** in one tap.
 - **Karma & Helallik Index:** A dynamic 0–100 scoring algorithm evaluating return timeliness and trust level.
 - **Agalar Directory:** Per-friend financial summaries with single-tap complete balance settlements.
 
@@ -72,7 +72,7 @@ helallesh/
 │   │   ├── FriendsScreen.js   # Friends balance matrix & 1-tap settlement
 │   │   └── StatsScreen.js     # Karma index, debt ratio, and return velocity
 │   └── utils/
-│       └── templates.js     # Mert Günaydın comedic WhatsApp summon templates
+│       └── templates.js     # Legalistic comedic WhatsApp summon templates
 ├── App.js                   # Root navigator, tab bar configuration, Context Provider
 ├── app.json                 # Expo EAS configuration, project ID, permissions
 ├── package.json             # Dependencies and build scripts
@@ -126,7 +126,7 @@ npx expo start -c
 - Capture receipt/bill photos for split expenses or document the physical condition of electronics/gear before handing them over.
 - Thumbnail previews inside cards and full-screen zoom modal in `DetailScreen`.
 
-### 4.3 Mert Günaydın Style WhatsApp Tebligat Generator
+### 4.3 Helallesh Legalistic WhatsApp Tebligat Generator
 - Generates 4 distinct legalistic comedic reminder templates:
   1. **Ağır Ceza Tebligatı:** Hyper-formal court paper declaring immediate seizure of the borrowed item.
   2. **Dost Meclisi İhtarı:** Humorous guilt-trip referencing shared memories and unreturned coffee/tea debts.
@@ -158,7 +158,7 @@ npx expo start -c
 ---
 
 ### Screen 2: Record Details & Tebligat Generator / Detay & Hatırlatıcı
-> Comprehensive view showing item information, photo proof preview, single-tap settlement actions, and the Mert Günaydın comedic WhatsApp summon generator.
+> Comprehensive view showing item information, photo proof preview, single-tap settlement actions, and the Helallesh comedic legal summon generator.
 
 ![Item Detail Screen](../screenshots/02_item_detail.png)
 
@@ -277,5 +277,5 @@ The project follows a semantic commit history documenting each development phase
 | **Number & Quality of UI Screens**| 5 rich screens + 2 interactive modals, Apple/Linear inspired semantic design system | ✅ Complete |
 | **Functionality & Stability** | Zero runtime crashes, full CRUD, WhatsApp linking, camera proofing, net balance math | ✅ Complete |
 | **Data Management / DB** | AsyncStorage persistent engine, realistic seed data, bidirectional data modeling | ✅ Complete |
-| **Originality & Problem Definition**| University peer economy problem, Mert Günaydın comedic court summons, gamified Karma | ✅ Complete |
+| **Originality & Problem Definition**| University peer economy problem, proprietary legalistic comedic court summons, gamified Karma | ✅ Complete |
 | **Documentation & Presentation** | Full PDF project report, high-res screenshots, 7-10 min dual-language presentation script | ✅ Complete |

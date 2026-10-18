@@ -427,7 +427,7 @@ export const DetailScreen = () => {
         {!selectedItem.isResolved && (
           <View style={styles.darlamaSection}>
             <Text style={styles.sectionTitle}>
-              {isBorrowed ? 'AGAYA ÖDEME / İADE MESAJLARI' : 'MERT GÜNAYDIN USULÜ DARLAMA MESAJLARI'}
+              {isBorrowed ? 'AGAYA ÖDEME / İADE MESAJLARI' : 'HELALLESH RESMİ İCRA & DARLAMA MESAJLARI'}
             </Text>
             <Text style={styles.sectionSubtitle}>
               Tek tıkla kopyala veya doğrudan aganın WhatsApp'ına fırlat:

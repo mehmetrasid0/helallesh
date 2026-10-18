@@ -28,7 +28,7 @@ In student life and close social circles, sharing things is constant: borrowed h
 **Helallesh** solves this awkwardness through **comedy, transparency, and gamified peer accountability**:
 - **Two-Way Balance Engine:** Tracks both money/items you lent (*Verdim / Alacak*) and debts you owe (*Aldım / Borç*), automatically consolidating them into a single **Net Balance**.
 - **Photo Proofing:** Attach camera or gallery photos of receipts, bills, and item conditions.
-- **Mert Günaydın Style WhatsApp Tebligat Generator:** Replaces passive-aggressive messages with hilarious, hyper-formal legal summons (*"Ağır Ceza Mahkemesi İcra Tebligatı"*) dispatched straight to WhatsApp in one tap.
+- **Helallesh Legal Humor WhatsApp Tebligat Generator:** Replaces passive-aggressive messages with hilarious, hyper-formal legal summons (*"Ağır Ceza Mahkemesi İcra Tebligatı"*) dispatched straight to WhatsApp in one tap.
 - **Helallik & Karma Score:** A dynamic 0–100 punctuality index measuring friend reliability.
 
 ---
@@ -38,7 +38,7 @@ In student life and close social circles, sharing things is constant: borrowed h
 - **Dynamic Net Balance Hero:** Instantly displays whether friends owe you money (`+250 ₺ Agalar Sana Borçlu`) or you have outstanding debts (`-180 ₺ Agalara Borcun Var`).
 - **Two-Way Transaction Flow:** Select between *Verdim (Alacaklıyım)* and *Aldım (Borçluyum)* with corresponding debtor settlement actions.
 - **Camera & Receipt Attachments:** Uses `expo-image-picker` to capture physical proofs with thumbnail previews and full-screen zoom.
-- **Mert Günaydın Comedic WhatsApp Summons:** 4 custom legalistic comedy templates sent via deep link directly to the recipient's WhatsApp chat.
+- **Helallesh Comedic Legal WhatsApp Summons:** 4 custom legalistic comedy templates sent via deep link directly to the recipient's WhatsApp chat.
 - **Agalar (Friends) Matrix:** Per-person net balances, trust badges, and single-tap full debt settlement.
 - **Helallik Analytics:** Visual charts showing return timeliness, total capital in circulation, and net position.
 - **Offline-First Persistence:** Centralized React Context state engine synced to `@react-native-async-storage/async-storage`.
@@ -82,7 +82,7 @@ helallesh/
 │   │   ├── FriendsScreen.js   # Friends balance matrix & 1-tap settlement
 │   │   └── StatsScreen.js     # Karma index, debt ratio, and return velocity
 │   └── utils/
-│       └── templates.js     # Mert Günaydın comedic WhatsApp summon templates
+│       └── templates.js     # Legalistic comedic WhatsApp summon templates
 ├── App.js                   # Root navigator, tab bar configuration, Context Provider
 ├── app.json                 # Expo EAS configuration, project ID, permissions
 ├── package.json             # Dependencies and build scripts
@@ -185,7 +185,7 @@ Mapping 100% to the evaluation criteria in `mobile_final_project_EN.md`:
 | **Number & Quality of UI Screens** | 5 distinct screens + 2 interactive modals, Apple/Linear aesthetic | ✅ Complete |
 | **Functionality & Stability** | Fully functional CRUD, WhatsApp linking, camera proofing, net balance math | ✅ Complete |
 | **Data Management / Storage** | AsyncStorage persistence, seed data, structured schema | ✅ Complete |
-| **Originality & Problem Definition** | University peer economy, Mert Günaydın comedic court summons, gamified Karma | ✅ Complete |
+| **Originality & Problem Definition** | University peer economy, proprietary legalistic comedic court summons, gamified Karma | ✅ Complete |
 | **Documentation & Presentation** | Full PDF project report, high-res screenshots, 7-10 min dual-language presentation script | ✅ Complete |
 
 ---

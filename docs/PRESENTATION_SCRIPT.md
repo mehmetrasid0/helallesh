@@ -50,7 +50,7 @@
 > Piyasada Splitwise gibi sadece hesap bölen ya da Excel benzeri soğuk finans uygulamaları var. Ancak hiçbiri öğrenci kültürünün dinamiklerini taşımıyor. Helallesh üç temel yenilikle fark yaratıyor:
 > 1. **İki Yönlü Takip (Bidirectional Balance):** Sadece alacaklı olduğum değil, borçlu olduğum şeyleri de kaydedebiliyorum. Sistem bana anında net bakiyemi söylüyor: *'+250 ₺ Agalar Sana Borçlu'*.
 > 2. **Fotoğraflı Kanıt (Photo Proofing):** Eşyayı teslim ederken kondisyonunu, ya da hesabı ödediğimde fişin fotoğrafını tek tıkla kamerayla çekip sisteme iliştirebiliyorum.
-> 3. **Mert Günaydın Tarzı Komik Tebligat Jeneratörü:** Hatırlatmayı resmi ve sıkıcı bir dille yapmak yerine, YouTube ve sosyal medyadaki 'ağır ceza / haciz tebligatı' mizahıyla WhatsApp üzerinden arkadaşımıza resmi bir mahkeme kağıdı gibi gönderiyoruz. Böylece arkadaşımız kırılmıyor, aksine gülerek borcunu ödüyor."
+> 3. **Helallesh Adli Tebligat Jeneratörü:** Hatırlatmayı resmi ve sıkıcı bir dille yapmak yerine, mizahi bir 'ağır ceza / icra tebligatı' formatıyla WhatsApp üzerinden arkadaşımıza resmi bir mahkeme celbi gibi gönderiyoruz. Böylece arkadaşımız kırılmıyor, aksine gülerek borcunu ödüyor."
 
 ---
 
@@ -78,7 +78,7 @@
 > 
 > 2. **Kayıt Ekleme (Add Screen):** '+ Yeni Kayıt' butonuna bastığımızda açılan formda 'Verdim (Alacaklıyım)' veya 'Aldım (Borçluyum)' seçimi yapıyoruz. Emanet eşya mı yoksa para mı belirleyip, kameradan fiş veya eşya fotoğrafını ekleyebiliyoruz.
 > 
-> 3. **Detay ve Tebligat Ekranı (Detail Screen):** Bir kayda tıkladığımızda eklenen fiş fotoğrafını büyütebiliyoruz. Eğer borcu ödediysek 'Hesabı Kapat' diyoruz. Eğer arkadaşımız hala getirmediyse 'Mert Günaydın Tebligatı Gönder' butonuna basıyoruz. Burada 4 farklı hazır şablonumuz var: *Ağır Ceza Mahkemesi, Dost Meclisi İhtarı, İcra Tebligatı*. 'WhatsApp ile Yolla' dediğimiz anda doğrudan arkadaşın sohbetine tebligat metni düşüyor.
+> 3. **Detay ve Tebligat Ekranı (Detail Screen):** Bir kayda tıkladığımızda eklenen fiş fotoğrafını büyütebiliyoruz. Eğer borcu ödediysek 'Hesabı Kapat' diyoruz. Eğer arkadaşımız hala getirmediyse 'Helallesh Tebligatı Gönder' butonuna basıyoruz. Burada 4 farklı hazır şablonumuz var: *Ağır Ceza Mahkemesi, Dost Meclisi İhtarı, İcra Tebligatı*. 'WhatsApp ile Yolla' dediğimiz anda doğrudan arkadaşın sohbetine tebligat metni düşüyor.
 > 
 > 4. **Agalar Ekranı (Friends Screen):** Hangi arkadaşımla ne kadar net bakiyem olduğunu özetliyor. Örneğin Mert'ten 250 TL alacağım varken, Burak'a 40 TL borcum olduğunu görüyorum. Ayrıca 'Tümünü Helalleş' butonuyla tek tıkla o kişiyle olan tüm aktif hesapları kapatabiliyorum.
 > 
@@ -103,7 +103,7 @@
 > "Gelecek versiyonlar için planlanan geliştirmeler:
 > 1. **Supabase / Firebase Entegrasyonu:** Arkadaşlar arasında çift taraflı senkronizasyon (ben kayıt açtığımda arkadaşımın telefonuna da bildirim düşmesi).
 > 2. **Push Bildirimleri:** Teslim tarihine 24 saat kala otomatik esprili tebligat bildirimleri.
-> 3. **Sesli Tebligat:** Mert Günaydın tarzı yapay zeka ses klonuyla 'Kardeşim o emanet ne oldu?' şeklinde ses kaydı gönderme.
+> 3. **Sesli Adli Tebligat:** Yapay zeka ses motoruyla 'Kardeşim o emanet ne oldu?' şeklinde esprili resmi ses kaydı gönderme.
 > 
 > Projemin tüm kaynak kodları, commit geçmişi ve dokümantasyonu GitHub repomda ve EAS bulut platformunda yer almaktadır.
 > Dinlediğiniz için teşekkür ederim, sorularınız varsa yanıtlamaktan mutluluk duyarım."
