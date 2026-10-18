@@ -20,9 +20,7 @@ export const DashboardScreen = () => {
 
   const todayStr = new Date().toISOString().split('T')[0];
 
-  // Filtering
   const filteredItems = items.filter((item) => {
-    // Search query
     const matchesSearch =
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.friendName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -30,7 +28,6 @@ export const DashboardScreen = () => {
 
     if (!matchesSearch) return false;
 
-    // Filter tabs
     if (activeFilter === 'all') return !item.isResolved;
     if (activeFilter === 'item') return item.type === 'item' && !item.isResolved;
     if (activeFilter === 'debt') return item.type === 'debt' && !item.isResolved;
@@ -42,65 +39,59 @@ export const DashboardScreen = () => {
 
   const filterTabs = [
     { key: 'all', label: 'Tümü', count: stats.activeCount },
-    { key: 'item', label: '🎒 Emanetler', count: stats.totalActiveLoansCount },
-    { key: 'debt', label: '💸 Borçlar', count: stats.activeCount - stats.totalActiveLoansCount },
-    { key: 'overdue', label: '🚨 Gecikenler', count: stats.overdueCount, isAlert: true },
-    { key: 'resolved', label: '✅ Helalleşildi', count: stats.totalResolvedCount },
+    { key: 'item', label: 'Emanetler', count: stats.totalActiveLoansCount },
+    { key: 'debt', label: 'Borçlar', count: stats.activeCount - stats.totalActiveLoansCount },
+    { key: 'overdue', label: 'Gecikenler', count: stats.overdueCount, isAlert: true },
+    { key: 'resolved', label: 'Kapananlar', count: stats.totalResolvedCount },
   ];
 
   return (
     <View style={styles.container}>
-      {/* Metrics Row */}
-      <View style={styles.statsRow}>
+      {/* Metric Cards Row */}
+      <View style={styles.metricsRow}>
         <StatCard
-          title="İçerideki Para"
+          title="Toplam Alacak"
           value={formatCurrency(stats.totalReceivable)}
-          subtitle="Agalardan alacak"
+          subtitle="Borç bakiyesi"
           icon="cash-multiple"
-          color={THEME.colors.emerald}
-          bgColor={THEME.colors.emeraldBg}
           onPress={() => setActiveFilter('debt')}
         />
         <StatCard
-          title="Dışarıdaki Eşya"
-          value={`${stats.totalActiveLoansCount} Adet`}
-          subtitle="Emanette gezen"
-          icon="bag-personal"
-          color={THEME.colors.amber}
-          bgColor={THEME.colors.amberBg}
+          title="Verilen Eşya"
+          value={`${stats.totalActiveLoansCount} adet`}
+          subtitle="Emanet sayısı"
+          icon="package-variant"
           onPress={() => setActiveFilter('item')}
         />
         <StatCard
-          title="İcra Kapısında"
-          value={`${stats.overdueCount} Kayıt`}
-          subtitle="Günü geçmiş"
-          icon="alert-octagon"
-          color={THEME.colors.rose}
-          bgColor={THEME.colors.roseBg}
+          title="Geciken"
+          value={`${stats.overdueCount}`}
+          subtitle="Süresi dolan"
+          icon="alert-circle-outline"
           isAlert={stats.overdueCount > 0}
           onPress={() => setActiveFilter('overdue')}
         />
       </View>
 
-      {/* Search Input */}
-      <View style={styles.searchContainer}>
-        <MaterialCommunityIcons name="magnify" size={20} color={THEME.colors.textMuted} />
+      {/* Clean Search Input */}
+      <View style={styles.searchBox}>
+        <MaterialCommunityIcons name="magnify" size={18} color={THEME.colors.textMuted} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Eşya, kanka veya harcama ara..."
+          placeholder="Ara: eşya, kişi, harcama..."
           placeholderTextColor={THEME.colors.textMuted}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
         {searchQuery ? (
           <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <MaterialCommunityIcons name="close-circle" size={18} color={THEME.colors.textMuted} />
+            <MaterialCommunityIcons name="close-circle" size={16} color={THEME.colors.textMuted} />
           </TouchableOpacity>
         ) : null}
       </View>
 
-      {/* Filter Tabs Horizontal Scroll */}
-      <View style={styles.filterWrapper}>
+      {/* Segmented Filter Control */}
+      <View style={styles.filterContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
           {filterTabs.map((tab) => {
             const isActive = activeFilter === tab.key;
@@ -108,50 +99,45 @@ export const DashboardScreen = () => {
               <TouchableOpacity
                 key={tab.key}
                 style={[
-                  styles.filterChip,
-                  isActive && styles.activeFilterChip,
-                  tab.isAlert && tab.count > 0 && styles.alertFilterChip,
+                  styles.filterTab,
+                  isActive && styles.activeFilterTab,
                 ]}
                 activeOpacity={0.7}
                 onPress={() => setActiveFilter(tab.key)}
               >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    isActive && styles.activeFilterChipText,
-                    tab.isAlert && tab.count > 0 && styles.alertFilterText,
-                  ]}
-                >
-                  {tab.label} ({tab.count})
+                <Text style={[styles.filterTabText, isActive && styles.activeFilterTabText]}>
+                  {tab.label}
                 </Text>
+                <View style={[styles.countBadge, isActive && styles.activeCountBadge]}>
+                  <Text style={[styles.countText, isActive && styles.activeCountText]}>
+                    {tab.count}
+                  </Text>
+                </View>
               </TouchableOpacity>
             );
           })}
         </ScrollView>
       </View>
 
-      {/* Main List */}
+      {/* List */}
       <FlatList
         data={filteredItems}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <ItemCard item={item} />}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons name="handshake-outline" size={48} color={THEME.colors.textMuted} />
-            <Text style={styles.emptyTitle}>Kayıt Bulunamadı</Text>
-            <Text style={styles.emptySubtitle}>
-              {searchQuery
-                ? 'Arama kriterlerine uygun emanet veya borç yok.'
-                : 'Şu an bu filtrede bekleyen helalleşme yok, agalar temiz!'}
+          <View style={styles.emptyBox}>
+            <MaterialCommunityIcons name="inbox-outline" size={40} color={THEME.colors.textMuted} />
+            <Text style={styles.emptyTitle}>Kayıt bulunamadı</Text>
+            <Text style={styles.emptySub}>
+              {searchQuery ? 'Aramanıza uygun bir kayıt eşleşmedi.' : 'Bu kategoride bekleyen bir işlem bulunmuyor.'}
             </Text>
             <TouchableOpacity
-              style={styles.emptyButton}
+              style={styles.emptyAction}
               onPress={() => setCurrentScreen('add')}
             >
-              <MaterialCommunityIcons name="plus" size={18} color="#FFFFFF" />
-              <Text style={styles.emptyButtonText}>Yeni Kayıt Ekle</Text>
+              <Text style={styles.emptyActionText}>Yeni Kayıt Oluştur</Text>
             </TouchableOpacity>
           </View>
         }
@@ -165,100 +151,114 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: THEME.colors.background,
     paddingHorizontal: THEME.spacing.md,
+    paddingTop: THEME.spacing.sm,
   },
-  statsRow: {
+  metricsRow: {
     flexDirection: 'row',
-    gap: THEME.spacing.sm,
-    marginBottom: THEME.spacing.md,
+    gap: 8,
+    marginBottom: 12,
   },
-  searchContainer: {
+  searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: THEME.colors.surface,
-    borderRadius: THEME.borderRadius.md,
+    borderRadius: THEME.borderRadius.sm,
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: THEME.spacing.sm,
+    paddingVertical: 9,
     borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
+    borderColor: THEME.colors.border,
     gap: 8,
+    marginBottom: 10,
   },
   searchInput: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 13,
     color: THEME.colors.textPrimary,
   },
-  filterWrapper: {
-    marginBottom: THEME.spacing.sm,
+  filterContainer: {
+    marginBottom: 10,
   },
   filterScroll: {
-    paddingVertical: 4,
-    gap: 8,
+    flexDirection: 'row',
+    backgroundColor: THEME.colors.surfaceSubtle,
+    borderRadius: THEME.borderRadius.sm,
+    padding: 3,
+    gap: 4,
   },
-  filterChip: {
-    backgroundColor: THEME.colors.surface,
-    paddingHorizontal: 12,
+  filterTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: THEME.borderRadius.full,
-    borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
+    borderRadius: THEME.borderRadius.xs,
   },
-  activeFilterChip: {
-    backgroundColor: THEME.colors.primary,
-    borderColor: THEME.colors.primaryLight,
+  activeFilterTab: {
+    backgroundColor: THEME.colors.surface,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  alertFilterChip: {
-    borderColor: 'rgba(244, 63, 94, 0.4)',
-    backgroundColor: 'rgba(244, 63, 94, 0.1)',
-  },
-  filterChipText: {
+  filterTabText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '500',
     color: THEME.colors.textSecondary,
   },
-  activeFilterChipText: {
-    color: '#FFFFFF',
+  activeFilterTabText: {
+    color: THEME.colors.textPrimary,
     fontWeight: '700',
   },
-  alertFilterText: {
-    color: THEME.colors.rose,
+  countBadge: {
+    backgroundColor: THEME.colors.border,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 10,
   },
-  listContent: {
-    paddingBottom: 24,
-    paddingTop: 4,
+  activeCountBadge: {
+    backgroundColor: THEME.colors.primary,
   },
-  emptyContainer: {
+  countText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: THEME.colors.textSecondary,
+  },
+  activeCountText: {
+    color: '#FFFFFF',
+  },
+  listContainer: {
+    paddingBottom: 20,
+  },
+  emptyBox: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 48,
     paddingHorizontal: 24,
   },
   emptyTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     color: THEME.colors.textPrimary,
-    marginTop: 12,
+    marginTop: 10,
   },
-  emptySubtitle: {
-    fontSize: 13,
+  emptySub: {
+    fontSize: 12,
     color: THEME.colors.textMuted,
     textAlign: 'center',
-    marginTop: 6,
-    marginBottom: 20,
-    lineHeight: 18,
+    marginTop: 4,
+    marginBottom: 16,
+    lineHeight: 16,
   },
-  emptyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+  emptyAction: {
     backgroundColor: THEME.colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: THEME.borderRadius.md,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: THEME.borderRadius.sm,
   },
-  emptyButtonText: {
-    fontSize: 13,
-    fontWeight: '700',
+  emptyActionText: {
+    fontSize: 12,
+    fontWeight: '600',
     color: '#FFFFFF',
   },
 });

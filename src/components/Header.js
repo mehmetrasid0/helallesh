@@ -5,35 +5,30 @@ import { THEME } from '../constants/theme';
 import { useApp } from '../context/AppContext';
 
 export const Header = () => {
-  const { resetToDefaults, stats } = useApp();
+  const { resetToDefaults } = useApp();
 
   return (
     <View style={styles.container}>
-      <View style={styles.titleRow}>
-        <View style={styles.logoBadge}>
-          <MaterialCommunityIcons name="scale-balance" size={24} color="#6366F1" />
+      <View style={styles.brandRow}>
+        <View style={styles.iconBox}>
+          <MaterialCommunityIcons name="scale-balance" size={20} color={THEME.colors.primary} />
         </View>
-        <View style={styles.textContainer}>
-          <View style={styles.brandRow}>
-            <Text style={styles.brandName}>helallesh</Text>
-            <View style={styles.pillBadge}>
-              <Text style={styles.pillText}>BETA v1.0</Text>
-            </View>
-          </View>
-          <Text style={styles.tagline}>Agalar Arası Emanet & Borç Adalet Asistanı</Text>
+        <View>
+          <Text style={styles.brandTitle}>helallesh</Text>
+          <Text style={styles.brandSubtitle}>Emanet & Hesap Takibi</Text>
         </View>
       </View>
 
-      <TouchableOpacity 
-        style={styles.resetButton}
+      <TouchableOpacity
+        style={styles.refreshBtn}
         onPress={() => {
-          if (confirm('Örnek veriler sıfırlansın mı?')) {
+          if (confirm('Varsayılan veriler yenilensin mi?')) {
             resetToDefaults();
           }
         }}
-        accessibilityLabel="Verileri Yenile"
+        accessibilityLabel="Yenile"
       >
-        <MaterialCommunityIcons name="refresh" size={20} color={THEME.colors.textSecondary} />
+        <MaterialCommunityIcons name="refresh" size={18} color={THEME.colors.textSecondary} />
       </TouchableOpacity>
     </View>
   );
@@ -47,63 +42,40 @@ const styles = StyleSheet.create({
     paddingHorizontal: THEME.spacing.md,
     paddingTop: THEME.spacing.md,
     paddingBottom: THEME.spacing.sm,
-    backgroundColor: THEME.colors.background,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  logoBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: 'rgba(99, 102, 241, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  textContainer: {
-    justifyContent: 'center',
+    backgroundColor: THEME.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.colors.borderSubtle,
   },
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
-  brandName: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: THEME.colors.textPrimary,
-    letterSpacing: -0.5,
+  iconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: THEME.borderRadius.sm,
+    backgroundColor: THEME.colors.surfaceSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  pillBadge: {
-    backgroundColor: 'rgba(99, 102, 241, 0.2)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.4)',
-  },
-  pillText: {
-    color: '#818CF8',
-    fontSize: 9,
+  brandTitle: {
+    fontSize: 17,
     fontWeight: '800',
-    letterSpacing: 0.5,
+    color: THEME.colors.textPrimary,
+    letterSpacing: -0.4,
   },
-  tagline: {
-    fontSize: 12,
+  brandSubtitle: {
+    fontSize: 11,
     color: THEME.colors.textMuted,
     fontWeight: '500',
+    marginTop: -1,
   },
-  resetButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: THEME.colors.surface,
-    borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
+  refreshBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: THEME.borderRadius.sm,
+    backgroundColor: THEME.colors.surfaceSubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -1,63 +1,59 @@
+// Minimalist, Eye-friendly, Human-crafted Design System (Apple HIG / Linear / Revolut Inspired)
 export const THEME = {
   colors: {
-    background: '#0B0F19',
-    surface: '#151C2C',
-    surfaceLight: '#1E293B',
-    surfaceBorder: '#2A364F',
+    // Canvas & Surfaces
+    background: '#F8FAFC',       // Clean, warm off-white canvas
+    surface: '#FFFFFF',          // Pure white card
+    surfaceElevated: '#FFFFFF',
+    surfaceSubtle: '#F1F5F9',    // Light gray for input backgrounds, pills
+    border: '#E2E8F0',           // Crisp hairline border
+    borderSubtle: '#F1F5F9',
     
-    // Brand Colors
-    primary: '#6366F1', // Indigo
-    primaryLight: '#818CF8',
-    primaryDark: '#4F46E5',
+    // Primary / Brand (Sophisticated Ink & Indigo)
+    primary: '#0F172A',          // Deep Slate / Ink
+    primaryHover: '#1E293B',
+    accent: '#2563EB',           // Crisp subtle cobalt
+    accentLight: '#EFF6FF',
     
-    // Status & Category Colors
-    emerald: '#10B981', // Helalleşildi / Tahsil edildi
-    emeraldBg: 'rgba(16, 185, 129, 0.15)',
+    // Status Badges (Soft, Desaturated, Non-Aggressive)
+    success: '#059669',          // Helalleşildi
+    successBg: '#ECFDF5',
+    successBorder: '#A7F3D0',
     
-    amber: '#F59E0B', // Emanet Eşya / Beklemede
-    amberBg: 'rgba(245, 158, 11, 0.15)',
+    warning: '#D97706',          // Beklemede
+    warningBg: '#FFFBEB',
+    warningBorder: '#FDE68A',
     
-    rose: '#F43F5E', // Borç / Gecikmiş / İcra
-    roseBg: 'rgba(244, 63, 94, 0.15)',
+    danger: '#DC2626',           // Gecikmiş / İcra
+    dangerBg: '#FEF2F2',
+    dangerBorder: '#FECACA',
     
-    cyan: '#06B6D4',
-    cyanBg: 'rgba(6, 182, 212, 0.15)',
+    neutral: '#475569',
+    neutralBg: '#F8FAFC',
     
-    purple: '#A855F7',
-    purpleBg: 'rgba(168, 85, 247, 0.15)',
-
-    // Texts
-    textPrimary: '#F8FAFC',
-    textSecondary: '#94A3B8',
-    textMuted: '#64748B',
-    textInverse: '#0B0F19',
+    // Typography
+    textPrimary: '#0F172A',      // High-contrast deep slate
+    textSecondary: '#475569',    // Neutral graphite
+    textMuted: '#94A3B8',        // Soft gray placeholder/meta
+    textInverse: '#FFFFFF',
     
-    // UI Helpers
-    border: '#243049',
-    white: '#FFFFFF',
-    black: '#000000',
-    cardShadow: 'rgba(0, 0, 0, 0.4)',
+    // Shadows (Soft, Realistic, Not heavy)
+    shadowSm: 'rgba(15, 23, 42, 0.04)',
+    shadowMd: 'rgba(15, 23, 42, 0.08)',
   },
   spacing: {
     xs: 4,
     sm: 8,
     md: 16,
-    lg: 24,
-    xl: 32,
-  },
-  borderRadius: {
-    sm: 8,
-    md: 14,
     lg: 20,
     xl: 28,
+  },
+  borderRadius: {
+    xs: 6,
+    sm: 10,
+    md: 14,
+    lg: 18,
+    xl: 24,
     full: 9999,
   },
-  typography: {
-    h1: { fontSize: 26, fontWeight: '800', letterSpacing: -0.5 },
-    h2: { fontSize: 20, fontWeight: '700', letterSpacing: -0.3 },
-    h3: { fontSize: 17, fontWeight: '700' },
-    body: { fontSize: 14, fontWeight: '400', lineHeight: 20 },
-    caption: { fontSize: 12, fontWeight: '500' },
-    badge: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
-  }
 };

@@ -27,13 +27,13 @@ export const DetailScreen = () => {
 
   if (!selectedItem) {
     return (
-      <View style={styles.notFoundContainer}>
+      <View style={styles.notFoundBox}>
         <Text style={styles.notFoundText}>Kayıt bulunamadı.</Text>
         <TouchableOpacity
-          style={styles.backButton}
+          style={styles.backLink}
           onPress={() => setCurrentScreen('dashboard')}
         >
-          <Text style={styles.backButtonText}>Panoya Dön</Text>
+          <Text style={styles.backLinkText}>Panoya Dön</Text>
         </TouchableOpacity>
       </View>
     );
@@ -42,8 +42,6 @@ export const DetailScreen = () => {
   const isDebt = selectedItem.type === 'debt';
   const daysInfo = calculateDaysStatus(selectedItem.dueDate);
   const friendObj = friends.find((f) => f.id === selectedItem.friendId);
-
-  // Available templates
   const templates = isDebt ? DARLAMA_TEMPLATES.debt : DARLAMA_TEMPLATES.item;
 
   const handleCopyText = (templateText, id) => {
@@ -51,7 +49,7 @@ export const DetailScreen = () => {
       navigator.clipboard.writeText(templateText);
     }
     setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2500);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   const handleSendWhatsApp = (templateText) => {
@@ -70,136 +68,106 @@ export const DetailScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Top Header */}
-      <View style={styles.headerRow}>
+      {/* Header */}
+      <View style={styles.navRow}>
         <TouchableOpacity
-          style={styles.circleBtn}
+          style={styles.backBtn}
           onPress={() => setCurrentScreen('dashboard')}
         >
-          <MaterialCommunityIcons name="arrow-left" size={22} color={THEME.colors.textPrimary} />
+          <MaterialCommunityIcons name="arrow-left" size={20} color={THEME.colors.textPrimary} />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>
-          {isDebt ? 'Borç / Alacak Detayı' : 'Emanet Detayı'}
+        <Text style={styles.navTitle}>
+          {isDebt ? 'Borç Detayı' : 'Emanet Detayı'}
         </Text>
 
         <TouchableOpacity
-          style={[styles.circleBtn, styles.deleteBtn]}
+          style={styles.deleteBtn}
           onPress={handleDelete}
         >
-          <MaterialCommunityIcons name="trash-can-outline" size={20} color={THEME.colors.rose} />
+          <MaterialCommunityIcons name="trash-can-outline" size={18} color={THEME.colors.danger} />
         </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Main Item Card Hero */}
-        <View style={[styles.heroCard, selectedItem.isResolved && styles.heroResolved]}>
-          <View style={styles.heroTop}>
-            <View style={[
-              styles.heroIconBox,
-              { backgroundColor: isDebt ? THEME.colors.emeraldBg : THEME.colors.amberBg }
-            ]}>
-              <MaterialCommunityIcons
-                name={selectedItem.icon || (isDebt ? 'cash-multiple' : 'bag-personal')}
-                size={32}
-                color={isDebt ? THEME.colors.emerald : THEME.colors.amber}
-              />
-            </View>
-
-            <View style={styles.heroBadges}>
-              <View style={[styles.statusBadge, { backgroundColor: daysInfo.badgeBg }]}>
+        {/* Main Card */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View style={styles.badgeRow}>
+              <View style={[styles.statusBadge, { backgroundColor: daysInfo.badgeBg, borderColor: daysInfo.badgeBorder }]}>
                 <Text style={[styles.statusBadgeText, { color: daysInfo.badgeColor }]}>
-                  {selectedItem.isResolved ? '✅ Helalleşildi' : daysInfo.text}
+                  {selectedItem.isResolved ? 'Helalleşildi' : daysInfo.text}
                 </Text>
               </View>
-              {!isDebt && (
-                <View style={styles.urgencyBadge}>
-                  <Text style={styles.urgencyBadgeText}>{selectedItem.urgency}</Text>
-                </View>
-              )}
+              <Text style={styles.categoryBadge}>{selectedItem.category}</Text>
             </View>
+
+            {isDebt && (
+              <Text style={styles.amountText}>{formatCurrency(selectedItem.amount)}</Text>
+            )}
           </View>
 
-          <Text style={styles.heroTitle}>{selectedItem.title}</Text>
-
-          {isDebt && (
-            <View style={styles.heroAmountRow}>
-              <Text style={styles.heroAmountLabel}>Toplam Alacak:</Text>
-              <Text style={styles.heroAmountValue}>{formatCurrency(selectedItem.amount)}</Text>
-            </View>
-          )}
+          <Text style={styles.titleText}>{selectedItem.title}</Text>
 
           {selectedItem.notes ? (
-            <View style={styles.notesBox}>
-              <Text style={styles.notesLabel}>Özel Not:</Text>
-              <Text style={styles.notesText}>"{selectedItem.notes}"</Text>
-            </View>
+            <Text style={styles.notesText}>"{selectedItem.notes}"</Text>
           ) : null}
 
-          {/* Dates & Timeline info */}
-          <View style={styles.timelineRow}>
-            <View style={styles.timelineItem}>
-              <Text style={styles.timelineLabel}>Verilme Tarihi</Text>
-              <Text style={styles.timelineValue}>{formatDate(selectedItem.givenDate)}</Text>
+          <View style={styles.metaGrid}>
+            <View style={styles.metaItem}>
+              <Text style={styles.metaLabel}>Verilme Tarihi</Text>
+              <Text style={styles.metaValue}>{formatDate(selectedItem.givenDate)}</Text>
             </View>
-            <View style={styles.timelineDivider} />
-            <View style={styles.timelineItem}>
-              <Text style={styles.timelineLabel}>Helalleşme Günü</Text>
-              <Text style={styles.timelineValue}>{formatDate(selectedItem.dueDate)}</Text>
+            <View style={styles.metaDivider} />
+            <View style={styles.metaItem}>
+              <Text style={styles.metaLabel}>Beklenen Tarih</Text>
+              <Text style={styles.metaValue}>{formatDate(selectedItem.dueDate)}</Text>
             </View>
           </View>
         </View>
 
-        {/* Borrower / Kanka Profile Card */}
-        <View style={styles.friendCard}>
-          <Text style={styles.sectionSubtitle}>Emanetin Bulunduğu Kanka</Text>
-          <View style={styles.friendRow}>
-            <Text style={styles.friendAvatar}>{friendObj?.avatar || '😎'}</Text>
-            <View style={styles.friendDetails}>
-              <Text style={styles.friendName}>{selectedItem.friendName}</Text>
-              <Text style={styles.friendScoreText}>
-                Helallik Skoru: <Text style={styles.friendScoreVal}>{friendObj?.score || 75}/100</Text>
-              </Text>
-            </View>
-            <TouchableOpacity
-              style={styles.viewFriendBtn}
-              onPress={() => setCurrentScreen('friends')}
-            >
-              <Text style={styles.viewFriendBtnText}>Karneye Bak</Text>
-            </TouchableOpacity>
+        {/* Borrower Friend Profile */}
+        <View style={styles.profileBox}>
+          <View style={styles.profileAvatar}>
+            <Text style={styles.profileAvatarText}>
+              {friendObj?.avatar?.length <= 2 ? friendObj.avatar : selectedItem.friendName.slice(0, 2).toUpperCase()}
+            </Text>
           </View>
+          <View style={styles.profileDetails}>
+            <Text style={styles.profileName}>{selectedItem.friendName}</Text>
+            <Text style={styles.profileScore}>
+              Güvenilirlik Skoru: <Text style={{ fontWeight: '700', color: THEME.colors.textPrimary }}>{friendObj?.score || 75}/100</Text>
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.profileAction}
+            onPress={() => setCurrentScreen('friends')}
+          >
+            <Text style={styles.profileActionText}>Kişi Karnesi</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Official Tebligat Button (For Debts) */}
+        {/* Official Court Document Trigger */}
         {isDebt && !selectedItem.isResolved && (
           <TouchableOpacity
-            style={styles.tebligatBanner}
-            activeOpacity={0.85}
+            style={styles.tebligatButton}
+            activeOpacity={0.8}
             onPress={() => setTebligatItem(selectedItem)}
           >
-            <View style={styles.tebligatIconBox}>
-              <MaterialCommunityIcons name="scale-balance" size={26} color="#D97706" />
+            <MaterialCommunityIcons name="file-document-outline" size={20} color={THEME.colors.primary} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.tebligatBtnTitle}>Resmi İcra Tebligatı Oluştur</Text>
+              <Text style={styles.tebligatBtnSub}>Mizahi mahkeme belgesi formatında paylaş</Text>
             </View>
-            <View style={styles.tebligatTextContainer}>
-              <Text style={styles.tebligatTitle}>T.C. Helallesh İcra Tebligatı Çıkar 📜</Text>
-              <Text style={styles.tebligatSubtitle}>
-                Agalar formatında resmi haciz/hatırlatma belgesi üret ve gönder!
-              </Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#D97706" />
+            <MaterialCommunityIcons name="chevron-right" size={20} color={THEME.colors.textMuted} />
           </TouchableOpacity>
         )}
 
-        {/* Darlama & WhatsApp Generator Section */}
+        {/* WhatsApp Darlama Templates */}
         {!selectedItem.isResolved && (
-          <View style={styles.darlamaSection}>
-            <View style={styles.darlamaHeaderRow}>
-              <MaterialCommunityIcons name="whatsapp" size={22} color="#25D366" />
-              <Text style={styles.darlamaTitle}>WhatsApp Darlama Asistanı</Text>
-            </View>
-            <Text style={styles.darlamaDesc}>
-              Aşağıdaki hazır mizahi mesaj şablonlarından birini seçip kankanın WhatsApp'ına tek tıkla pasla:
-            </Text>
+          <View style={styles.templatesSection}>
+            <Text style={styles.sectionTitle}>Hatırlatma Mesajları</Text>
+            <Text style={styles.sectionSubtitle}>Tek tıkla kopyalayıp WhatsApp üzerinden iletebilirsiniz:</Text>
 
             {templates.map((tpl) => {
               const msg = isDebt
@@ -209,30 +177,32 @@ export const DetailScreen = () => {
 
               return (
                 <View key={tpl.id} style={styles.templateCard}>
-                  <Text style={styles.templateLevel}>{tpl.level}</Text>
-                  <Text style={styles.templateQuote}>"{msg}"</Text>
+                  <Text style={styles.templateHeader}>{tpl.level}</Text>
+                  <Text style={styles.templateBody}>{msg}</Text>
 
-                  <View style={styles.templateActions}>
+                  <View style={styles.templateBtnRow}>
                     <TouchableOpacity
-                      style={styles.copyBtn}
+                      style={styles.templateSmallBtn}
                       onPress={() => handleCopyText(msg, tpl.id)}
                     >
                       <MaterialCommunityIcons
                         name={isCopied ? "check" : "content-copy"}
-                        size={16}
+                        size={14}
                         color={THEME.colors.textSecondary}
                       />
-                      <Text style={styles.copyBtnText}>
-                        {isCopied ? 'Kopyalandı!' : 'Kopyala'}
+                      <Text style={styles.templateSmallBtnText}>
+                        {isCopied ? 'Kopyalandı' : 'Kopyala'}
                       </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={styles.sendWhatsAppBtn}
+                      style={[styles.templateSmallBtn, styles.templatePrimaryBtn]}
                       onPress={() => handleSendWhatsApp(msg)}
                     >
-                      <MaterialCommunityIcons name="send" size={16} color="#FFFFFF" />
-                      <Text style={styles.sendWhatsAppBtnText}>Gönder</Text>
+                      <MaterialCommunityIcons name="whatsapp" size={14} color="#FFFFFF" />
+                      <Text style={[styles.templateSmallBtnText, { color: '#FFFFFF' }]}>
+                        WhatsApp
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -241,13 +211,13 @@ export const DetailScreen = () => {
           </View>
         )}
 
-        {/* Helalleşildi / Kurtarıldı Action Button */}
-        <View style={styles.bottomActionWrapper}>
+        {/* Helalleşildi / Mark Complete Button */}
+        <View style={styles.actionSection}>
           {selectedItem.isResolved ? (
-            <View style={styles.alreadyResolvedBanner}>
-              <MaterialCommunityIcons name="check-circle" size={24} color={THEME.colors.emerald} />
-              <Text style={styles.alreadyResolvedText}>
-                Bu kayıt {selectedItem.resolvedDate} tarihinde sağ salim helalleşildi.
+            <View style={styles.resolvedNotice}>
+              <MaterialCommunityIcons name="check-circle" size={18} color={THEME.colors.success} />
+              <Text style={styles.resolvedNoticeText}>
+                Bu kayıt {formatDate(selectedItem.resolvedDate)} tarihinde helalleşildi.
               </Text>
             </View>
           ) : (
@@ -256,18 +226,13 @@ export const DetailScreen = () => {
               activeOpacity={0.85}
               onPress={() => {
                 resolveItem(selectedItem.id);
-                alert(`Helallesh tamamlandı! ${selectedItem.friendName} kankanın Helallik Skoruna +8 puan eklendi.`);
+                alert(`Helallesh tamamlandı. ${selectedItem.friendName} skoru güncellendi.`);
               }}
             >
-              <MaterialCommunityIcons name="handshake" size={26} color="#FFFFFF" />
-              <View>
-                <Text style={styles.resolveButtonTitle}>
-                  {isDebt ? 'Parayı Tahsil Ettim (Helalleştik)' : 'Emaneti Geri Aldım (Helalleştik)'}
-                </Text>
-                <Text style={styles.resolveButtonSubtitle}>
-                  Kaydı arşive kaldırır ve kankanın puanını artırır
-                </Text>
-              </View>
+              <MaterialCommunityIcons name="check" size={18} color="#FFFFFF" />
+              <Text style={styles.resolveButtonText}>
+                {isDebt ? 'Ödeme Alındı (Helalleş)' : 'Emanet Teslim Alındı (Helalleş)'}
+              </Text>
             </TouchableOpacity>
           )}
         </View>
@@ -282,374 +247,299 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.background,
     paddingHorizontal: THEME.spacing.md,
   },
-  headerRow: {
+  navRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: THEME.spacing.sm,
-    marginBottom: THEME.spacing.sm,
+    paddingVertical: 12,
   },
-  circleBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+  backBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: THEME.borderRadius.sm,
     backgroundColor: THEME.colors.surface,
+    borderWidth: 1,
+    borderColor: THEME.colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
   },
   deleteBtn: {
-    borderColor: 'rgba(244, 63, 94, 0.3)',
-    backgroundColor: 'rgba(244, 63, 94, 0.1)',
+    width: 34,
+    height: 34,
+    borderRadius: THEME.borderRadius.sm,
+    backgroundColor: THEME.colors.surface,
+    borderWidth: 1,
+    borderColor: THEME.colors.dangerBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '800',
+  navTitle: {
+    fontSize: 15,
+    fontWeight: '700',
     color: THEME.colors.textPrimary,
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 30,
   },
-  heroCard: {
+  card: {
     backgroundColor: THEME.colors.surface,
-    borderRadius: THEME.borderRadius.xl,
-    padding: THEME.spacing.md,
+    borderRadius: THEME.borderRadius.md,
+    padding: 16,
     borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
-    marginBottom: THEME.spacing.md,
+    borderColor: THEME.colors.border,
+    marginBottom: 12,
   },
-  heroResolved: {
-    borderColor: 'rgba(16, 185, 129, 0.3)',
-  },
-  heroTop: {
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: THEME.spacing.md,
+    marginBottom: 10,
   },
-  heroIconBox: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
+  badgeRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heroBadges: {
-    alignItems: 'flex-end',
-    gap: 6,
+    gap: 8,
   },
   statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-  },
-  statusBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  urgencyBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: 4,
     borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
   },
-  urgencyBadgeText: {
+  statusBadgeText: {
     fontSize: 11,
-    color: THEME.colors.textSecondary,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  heroTitle: {
+  categoryBadge: {
+    fontSize: 11,
+    color: THEME.colors.textMuted,
+    fontWeight: '500',
+  },
+  amountText: {
     fontSize: 20,
     fontWeight: '800',
     color: THEME.colors.textPrimary,
-    lineHeight: 26,
-    marginBottom: 8,
   },
-  heroAmountRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 8,
-    marginVertical: 6,
-  },
-  heroAmountLabel: {
-    fontSize: 14,
-    color: THEME.colors.textMuted,
-    fontWeight: '600',
-  },
-  heroAmountValue: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: THEME.colors.emerald,
-  },
-  notesBox: {
-    backgroundColor: THEME.colors.surfaceLight,
-    padding: 10,
-    borderRadius: THEME.borderRadius.md,
-    marginVertical: 10,
-  },
-  notesLabel: {
-    fontSize: 11,
-    color: THEME.colors.textMuted,
+  titleText: {
+    fontSize: 18,
     fontWeight: '700',
-    marginBottom: 2,
+    color: THEME.colors.textPrimary,
+    lineHeight: 24,
+    marginBottom: 6,
   },
   notesText: {
     fontSize: 13,
     color: THEME.colors.textSecondary,
     fontStyle: 'italic',
+    marginBottom: 12,
   },
-  timelineRow: {
+  metaGrid: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     borderTopWidth: 1,
-    borderTopColor: THEME.colors.surfaceBorder,
+    borderTopColor: THEME.colors.borderSubtle,
     paddingTop: 12,
-    marginTop: 8,
+    marginTop: 4,
   },
-  timelineItem: {
-    alignItems: 'center',
+  metaItem: {
+    flex: 1,
   },
-  timelineLabel: {
+  metaLabel: {
     fontSize: 11,
     color: THEME.colors.textMuted,
     marginBottom: 2,
   },
-  timelineValue: {
+  metaValue: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '600',
     color: THEME.colors.textPrimary,
   },
-  timelineDivider: {
+  metaDivider: {
     width: 1,
     height: 24,
-    backgroundColor: THEME.colors.surfaceBorder,
+    backgroundColor: THEME.colors.borderSubtle,
+    marginHorizontal: 16,
   },
-  friendCard: {
+  profileBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: THEME.colors.surface,
-    borderRadius: THEME.borderRadius.lg,
-    padding: THEME.spacing.md,
-    borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
-    marginBottom: THEME.spacing.md,
-  },
-  sectionSubtitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: THEME.colors.textMuted,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  friendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  friendAvatar: {
-    fontSize: 32,
-    marginRight: 12,
-  },
-  friendDetails: {
-    flex: 1,
-  },
-  friendName: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: THEME.colors.textPrimary,
-  },
-  friendScoreText: {
-    fontSize: 12,
-    color: THEME.colors.textSecondary,
-    marginTop: 2,
-  },
-  friendScoreVal: {
-    fontWeight: '800',
-    color: THEME.colors.primaryLight,
-  },
-  viewFriendBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: THEME.colors.surfaceLight,
-  },
-  viewFriendBtnText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: THEME.colors.primaryLight,
-  },
-  tebligatBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(217, 119, 6, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(217, 119, 6, 0.4)',
-    borderRadius: THEME.borderRadius.lg,
-    padding: 14,
-    marginBottom: THEME.spacing.md,
-    gap: 12,
-  },
-  tebligatIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: 'rgba(217, 119, 6, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tebligatTextContainer: {
-    flex: 1,
-  },
-  tebligatTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#F59E0B',
-  },
-  tebligatSubtitle: {
-    fontSize: 11,
-    color: '#D97706',
-    marginTop: 2,
-  },
-  darlamaSection: {
-    backgroundColor: THEME.colors.surface,
-    borderRadius: THEME.borderRadius.xl,
-    padding: THEME.spacing.md,
-    borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
-    marginBottom: THEME.spacing.md,
-  },
-  darlamaHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-  },
-  darlamaTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: THEME.colors.textPrimary,
-  },
-  darlamaDesc: {
-    fontSize: 12,
-    color: THEME.colors.textMuted,
-    lineHeight: 16,
-    marginBottom: 12,
-  },
-  templateCard: {
-    backgroundColor: THEME.colors.surfaceLight,
     borderRadius: THEME.borderRadius.md,
     padding: 12,
-    marginBottom: 10,
     borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
+    borderColor: THEME.colors.border,
+    marginBottom: 12,
+    gap: 12,
   },
-  templateLevel: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: THEME.colors.primaryLight,
-    marginBottom: 6,
-  },
-  templateQuote: {
-    fontSize: 13,
-    color: THEME.colors.textSecondary,
-    fontStyle: 'italic',
-    lineHeight: 18,
-    marginBottom: 10,
-  },
-  templateActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 8,
-  },
-  copyBtn: {
-    flexDirection: 'row',
+  profileAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: THEME.colors.surfaceSubtle,
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: THEME.colors.border,
+  },
+  profileAvatarText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: THEME.colors.textPrimary,
+  },
+  profileDetails: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: THEME.colors.textPrimary,
+  },
+  profileScore: {
+    fontSize: 11,
+    color: THEME.colors.textSecondary,
+    marginTop: 2,
+  },
+  profileAction: {
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: THEME.colors.surface,
+    backgroundColor: THEME.colors.surfaceSubtle,
+    borderRadius: THEME.borderRadius.xs,
   },
-  copyBtnText: {
+  profileActionText: {
     fontSize: 11,
     fontWeight: '600',
     color: THEME.colors.textSecondary,
   },
-  sendWhatsAppBtn: {
+  tebligatButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: THEME.colors.surface,
+    borderRadius: THEME.borderRadius.md,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: THEME.colors.border,
+    marginBottom: 16,
+  },
+  tebligatBtnTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: THEME.colors.textPrimary,
+  },
+  tebligatBtnSub: {
+    fontSize: 11,
+    color: THEME.colors.textMuted,
+    marginTop: 1,
+  },
+  templatesSection: {
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: THEME.colors.textPrimary,
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontSize: 12,
+    color: THEME.colors.textMuted,
+    marginBottom: 10,
+  },
+  templateCard: {
+    backgroundColor: THEME.colors.surface,
+    borderRadius: THEME.borderRadius.md,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: THEME.colors.border,
+    marginBottom: 8,
+  },
+  templateHeader: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: THEME.colors.textSecondary,
+    marginBottom: 4,
+  },
+  templateBody: {
+    fontSize: 12,
+    color: THEME.colors.textPrimary,
+    lineHeight: 18,
+    marginBottom: 8,
+  },
+  templateBtnRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
+  templateSmallBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 12,
+    backgroundColor: THEME.colors.surfaceSubtle,
+    paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 6,
-    backgroundColor: '#25D366',
   },
-  sendWhatsAppBtnText: {
+  templatePrimaryBtn: {
+    backgroundColor: '#16A34A',
+  },
+  templateSmallBtnText: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: '600',
+    color: THEME.colors.textSecondary,
   },
-  bottomActionWrapper: {
-    marginTop: 8,
+  actionSection: {
+    marginTop: 4,
   },
-  alreadyResolvedBanner: {
+  resolvedNotice: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    padding: 14,
-    borderRadius: THEME.borderRadius.lg,
+    gap: 8,
+    backgroundColor: THEME.colors.successBg,
+    borderRadius: THEME.borderRadius.sm,
+    padding: 12,
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderColor: THEME.colors.successBorder,
   },
-  alreadyResolvedText: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: '700',
-    color: THEME.colors.emerald,
+  resolvedNoticeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: THEME.colors.success,
   },
   resolveButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    backgroundColor: THEME.colors.emerald,
-    padding: 16,
-    borderRadius: THEME.borderRadius.lg,
-    shadowColor: THEME.colors.emerald,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: THEME.colors.primary,
+    borderRadius: THEME.borderRadius.sm,
+    paddingVertical: 13,
   },
-  resolveButtonTitle: {
-    fontSize: 15,
-    fontWeight: '800',
+  resolveButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
     color: '#FFFFFF',
   },
-  resolveButtonSubtitle: {
-    fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: 2,
-  },
-  notFoundContainer: {
+  notFoundBox: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
   },
   notFoundText: {
-    fontSize: 16,
+    fontSize: 14,
     color: THEME.colors.textSecondary,
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  backButton: {
+  backLink: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     backgroundColor: THEME.colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: THEME.borderRadius.sm,
   },
-  backButtonText: {
+  backLinkText: {
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontWeight: '600',
+    fontSize: 12,
   },
 });

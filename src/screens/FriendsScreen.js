@@ -6,7 +6,6 @@ import {
   FlatList,
   TouchableOpacity,
   TextInput,
-  ScrollView,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { THEME } from '../constants/theme';
@@ -27,39 +26,38 @@ export const FriendsScreen = () => {
     setShowAddModal(false);
   };
 
-  // Sort friends by score descending (or group them)
   const sortedFriends = [...friends].sort((a, b) => b.score - a.score);
 
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <View>
-          <Text style={styles.headerTitle}>Agalar Karnesi 📋</Text>
-          <Text style={styles.headerSubtitle}>Güvenilirlik skorları ve sabıka kayıtları</Text>
+          <Text style={styles.headerTitle}>Kişiler & Güvenilirlik</Text>
+          <Text style={styles.headerSubtitle}>Emanet ve borç sadakat geçmişi</Text>
         </View>
         <TouchableOpacity
           style={styles.addBtn}
           onPress={() => setShowAddModal(!showAddModal)}
         >
-          <MaterialCommunityIcons name="account-plus" size={20} color="#FFFFFF" />
-          <Text style={styles.addBtnText}>Aga Ekle</Text>
+          <MaterialCommunityIcons name="plus" size={16} color="#FFFFFF" />
+          <Text style={styles.addBtnText}>Kişi Ekle</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Add Friend Form Box */}
+      {/* Add Friend Box */}
       {showAddModal && (
         <View style={styles.addFormBox}>
-          <Text style={styles.addFormTitle}>Yeni Kanka Kaydet</Text>
+          <Text style={styles.addFormTitle}>Yeni Kişi Ekle</Text>
           <TextInput
             style={styles.formInput}
-            placeholder="Adı Soyadı..."
+            placeholder="İsim Soyisim..."
             placeholderTextColor={THEME.colors.textMuted}
             value={name}
             onChangeText={setName}
           />
           <TextInput
             style={styles.formInput}
-            placeholder="Telefon / WhatsApp (Opsiyonel)..."
+            placeholder="Telefon (İsteğe bağlı)..."
             placeholderTextColor={THEME.colors.textMuted}
             keyboardType="phone-pad"
             value={phone}
@@ -88,10 +86,9 @@ export const FriendsScreen = () => {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        renderItem={({ item, index }) => {
+        renderItem={({ item }) => {
           const badge = getFriendBadge(item.score);
 
-          // Calculate friend's active stats
           const friendActiveItems = items.filter(
             (it) => it.friendId === item.id && !it.isResolved
           );
@@ -101,84 +98,55 @@ export const FriendsScreen = () => {
             .reduce((acc, cur) => acc + (Number(cur.amount) || 0), 0);
 
           return (
-            <View style={styles.friendCard}>
-              <View style={styles.cardTop}>
-                <View style={styles.avatarWrapper}>
-                  <Text style={styles.avatarText}>{item.avatar}</Text>
-                  {index === 0 && (
-                    <View style={styles.crownBadge}>
-                      <Text style={{ fontSize: 10 }}>👑</Text>
-                    </View>
-                  )}
+            <View style={styles.card}>
+              <View style={styles.cardMain}>
+                <View style={styles.avatarCircle}>
+                  <Text style={styles.avatarInitials}>
+                    {item.avatar.length <= 2 ? item.avatar : item.name.slice(0, 2).toUpperCase()}
+                  </Text>
                 </View>
 
-                <View style={styles.mainInfo}>
-                  <Text style={styles.friendName}>{item.name}</Text>
-                  <View style={[styles.rankBadge, { backgroundColor: badge.bg }]}>
-                    <Text style={[styles.rankText, { color: badge.color }]}>{badge.title}</Text>
+                <View style={styles.cardContent}>
+                  <View style={styles.nameRow}>
+                    <Text style={styles.personName}>{item.name}</Text>
+                    <View style={[styles.badge, { backgroundColor: badge.bg }]}>
+                      <Text style={[styles.badgeText, { color: badge.color }]}>{badge.title}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.metaRow}>
+                    <Text style={styles.metaText}>
+                      Emanet: <Text style={{ fontWeight: '600', color: THEME.colors.textPrimary }}>{loanCount > 0 ? `${loanCount} adet` : 'Yok'}</Text>
+                    </Text>
+                    <Text style={styles.dot}>•</Text>
+                    <Text style={styles.metaText}>
+                      Borç: <Text style={{ fontWeight: '600', color: THEME.colors.textPrimary }}>{debtSum > 0 ? formatCurrency(debtSum) : 'Yok'}</Text>
+                    </Text>
                   </View>
                 </View>
 
-                <View style={styles.scoreContainer}>
-                  <Text style={styles.scoreNumber}>{item.score}</Text>
-                  <Text style={styles.scoreLabel}>Helallik</Text>
+                <View style={styles.scoreBox}>
+                  <Text style={styles.scoreVal}>{item.score}</Text>
+                  <Text style={styles.scoreLabel}>Puan</Text>
                 </View>
               </View>
 
-              {/* Karma Progress Bar */}
-              <View style={styles.progressBarBg}>
-                <View
-                  style={[
-                    styles.progressBarFill,
-                    {
-                      width: `${item.score}%`,
-                      backgroundColor: badge.color,
-                    },
-                  ]}
-                />
+              {/* Progress bar */}
+              <View style={styles.progressTrack}>
+                <View style={[styles.progressFill, { width: `${item.score}%`, backgroundColor: badge.color }]} />
               </View>
 
-              {/* Status details: Items on loan & total debt */}
-              <View style={styles.balanceRow}>
-                <View style={styles.balanceItem}>
-                  <MaterialCommunityIcons
-                    name="bag-personal-outline"
-                    size={16}
-                    color={loanCount > 0 ? THEME.colors.amber : THEME.colors.textMuted}
-                  />
-                  <Text style={styles.balanceLabel}>
-                    Emanet: <Text style={styles.balanceHighlight}>{loanCount > 0 ? `${loanCount} Eşya Onda` : 'Temiz ✅'}</Text>
-                  </Text>
-                </View>
-
-                <View style={styles.balanceDivider} />
-
-                <View style={styles.balanceItem}>
-                  <MaterialCommunityIcons
-                    name="cash-multiple"
-                    size={16}
-                    color={debtSum > 0 ? THEME.colors.rose : THEME.colors.textMuted}
-                  />
-                  <Text style={styles.balanceLabel}>
-                    Borç: <Text style={styles.balanceHighlight}>{debtSum > 0 ? `${formatCurrency(debtSum)} içeride` : 'Borçsuz ✅'}</Text>
-                  </Text>
-                </View>
-              </View>
-
-              {/* Quick filter by friend */}
               {(loanCount > 0 || debtSum > 0) && (
                 <TouchableOpacity
-                  style={styles.filterByFriendBtn}
+                  style={styles.cardAction}
                   onPress={() => {
                     setSearchQuery(item.name);
                     setActiveFilter('all');
                     setCurrentScreen('dashboard');
                   }}
                 >
-                  <Text style={styles.filterByFriendText}>
-                    {item.name} ile Bekleyen Kayıtları Gör
-                  </Text>
-                  <MaterialCommunityIcons name="chevron-right" size={16} color={THEME.colors.primaryLight} />
+                  <Text style={styles.cardActionText}>Bekleyen kayıtları listele</Text>
+                  <MaterialCommunityIcons name="chevron-right" size={16} color={THEME.colors.textMuted} />
                 </TouchableOpacity>
               )}
             </View>
@@ -199,57 +167,56 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: THEME.spacing.sm,
-    marginBottom: THEME.spacing.sm,
+    paddingVertical: 12,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
     color: THEME.colors.textPrimary,
   },
   headerSubtitle: {
     fontSize: 12,
     color: THEME.colors.textMuted,
-    marginTop: 2,
+    marginTop: 1,
   },
   addBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
     backgroundColor: THEME.colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: THEME.borderRadius.md,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: THEME.borderRadius.sm,
   },
   addBtnText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
   addFormBox: {
     backgroundColor: THEME.colors.surface,
-    padding: 14,
-    borderRadius: THEME.borderRadius.lg,
+    padding: 12,
+    borderRadius: THEME.borderRadius.md,
     borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
-    marginBottom: THEME.spacing.md,
+    borderColor: THEME.colors.border,
+    marginBottom: 12,
   },
   addFormTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: THEME.colors.textPrimary,
-    marginBottom: 10,
-  },
-  formInput: {
-    backgroundColor: THEME.colors.surfaceLight,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
     fontSize: 13,
+    fontWeight: '700',
     color: THEME.colors.textPrimary,
     marginBottom: 8,
+  },
+  formInput: {
+    backgroundColor: THEME.colors.surfaceSubtle,
+    borderRadius: THEME.borderRadius.xs,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 12,
+    color: THEME.colors.textPrimary,
+    marginBottom: 6,
     borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
+    borderColor: THEME.colors.border,
   },
   addFormActions: {
     flexDirection: 'row',
@@ -258,144 +225,128 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   cancelBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
   cancelBtnText: {
     fontSize: 12,
     color: THEME.colors.textMuted,
-    fontWeight: '600',
   },
   saveBtn: {
     backgroundColor: THEME.colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: THEME.borderRadius.xs,
   },
   saveBtnText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
   listContent: {
-    paddingBottom: 30,
+    paddingBottom: 24,
   },
-  friendCard: {
+  card: {
     backgroundColor: THEME.colors.surface,
-    borderRadius: THEME.borderRadius.xl,
-    padding: THEME.spacing.md,
-    borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
-    marginBottom: THEME.spacing.md,
-  },
-  cardTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  avatarWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: THEME.colors.surfaceLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-    position: 'relative',
-  },
-  avatarText: {
-    fontSize: 26,
-  },
-  crownBadge: {
-    position: 'absolute',
-    top: -6,
-    right: -6,
-  },
-  mainInfo: {
-    flex: 1,
-  },
-  friendName: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: THEME.colors.textPrimary,
-  },
-  rankBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginTop: 4,
-  },
-  rankText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  scoreContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 8,
-  },
-  scoreNumber: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: THEME.colors.textPrimary,
-  },
-  scoreLabel: {
-    fontSize: 10,
-    color: THEME.colors.textMuted,
-    fontWeight: '600',
-  },
-  progressBarBg: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: THEME.colors.surfaceLight,
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
-  progressBarFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  balanceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: THEME.colors.surfaceLight,
     borderRadius: THEME.borderRadius.md,
-    padding: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: THEME.colors.border,
+    marginBottom: 8,
   },
-  balanceItem: {
+  cardMain: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: THEME.colors.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: THEME.colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  avatarInitials: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: THEME.colors.textPrimary,
+  },
+  cardContent: {
     flex: 1,
+  },
+  nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  balanceLabel: {
-    fontSize: 11,
-    color: THEME.colors.textSecondary,
-  },
-  balanceHighlight: {
+  personName: {
+    fontSize: 14,
     fontWeight: '700',
     color: THEME.colors.textPrimary,
   },
-  balanceDivider: {
-    width: 1,
-    height: 16,
-    backgroundColor: THEME.colors.surfaceBorder,
-    marginHorizontal: 8,
+  badge: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
   },
-  filterByFriendBtn: {
+  badgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 3,
+  },
+  metaText: {
+    fontSize: 11,
+    color: THEME.colors.textMuted,
+  },
+  dot: {
+    fontSize: 10,
+    color: THEME.colors.textMuted,
+  },
+  scoreBox: {
+    alignItems: 'center',
+    paddingLeft: 10,
+  },
+  scoreVal: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: THEME.colors.textPrimary,
+  },
+  scoreLabel: {
+    fontSize: 9,
+    color: THEME.colors.textMuted,
+  },
+  progressTrack: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: THEME.colors.surfaceSubtle,
+    overflow: 'hidden',
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  cardAction: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 10,
-    marginTop: 8,
+    paddingTop: 8,
+    marginTop: 6,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+    borderTopColor: THEME.colors.borderSubtle,
   },
-  filterByFriendText: {
+  cardActionText: {
     fontSize: 11,
-    fontWeight: '700',
-    color: THEME.colors.primaryLight,
+    color: THEME.colors.accent,
+    fontWeight: '600',
   },
 });

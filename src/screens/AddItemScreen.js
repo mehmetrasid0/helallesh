@@ -6,7 +6,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { THEME } from '../constants/theme';
@@ -17,40 +16,32 @@ export const AddItemScreen = () => {
   const { friends, addItem, addFriend, setCurrentScreen } = useApp();
 
   const [recordType, setRecordType] = useState('item'); // 'item' or 'debt'
-
-  // Common fields
   const [title, setTitle] = useState('');
   const [selectedFriendId, setSelectedFriendId] = useState(friends[0]?.id || '');
   const [newFriendName, setNewFriendName] = useState('');
   const [showAddFriendInput, setShowAddFriendInput] = useState(false);
   const [notes, setNotes] = useState('');
-  const [daysOption, setDaysOption] = useState(7); // 3, 7, 14, 30 days
+  const [daysOption, setDaysOption] = useState(7);
 
   // Item specific
-  const [category, setCategory] = useState('Kıyafet');
-  const [urgency, setUrgency] = useState('Orta ⚡');
+  const [category, setCategory] = useState('Giyim');
+  const [urgency, setUrgency] = useState('Orta');
 
   // Debt specific
   const [amount, setAmount] = useState('');
-  const [splitMode, setSplitMode] = useState('direct'); // 'direct' or 'split'
-  const [splitCount, setSplitCount] = useState(2); // Divide by N
+  const [splitMode, setSplitMode] = useState('direct');
+  const [splitCount, setSplitCount] = useState(2);
 
   const categories = [
-    { label: 'Kıyafet', icon: 'tshirt-crew' },
-    { label: 'Elektronik', icon: 'cellphone' },
-    { label: 'Kitap', icon: 'book-open-page-variant' },
-    { label: 'Oyun', icon: 'gamepad-variant' },
+    { label: 'Giyim', icon: 'tshirt-crew-outline' },
+    { label: 'Elektronik', icon: 'power-plug-outline' },
+    { label: 'Kitap', icon: 'book-open-outline' },
+    { label: 'Oyun', icon: 'controller-classic-outline' },
     { label: 'Aksesuar', icon: 'watch' },
     { label: 'Diğer', icon: 'dots-horizontal' },
   ];
 
-  const urgencyOptions = [
-    { label: 'Düşük ☕', color: THEME.colors.emerald },
-    { label: 'Orta ⚡', color: THEME.colors.primaryLight },
-    { label: 'Yüksek 🚨', color: THEME.colors.amber },
-    { label: 'Helal Etmem! 💀', color: THEME.colors.rose },
-  ];
-
+  const urgencyOptions = ['Düşük', 'Orta', 'Yüksek', 'Kritik'];
   const durationOptions = [
     { days: 3, label: '3 Gün' },
     { days: 7, label: '1 Hafta' },
@@ -58,7 +49,6 @@ export const AddItemScreen = () => {
     { days: 30, label: '1 Ay' },
   ];
 
-  // Calculated Due Date based on daysOption
   const getCalculatedDueDate = () => {
     const d = new Date();
     d.setDate(d.getDate() + daysOption);
@@ -67,7 +57,9 @@ export const AddItemScreen = () => {
 
   const handleAddNewFriend = () => {
     if (!newFriendName.trim()) return;
+    const initials = newFriendName.trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
     const created = addFriend(newFriendName.trim());
+    created.avatar = initials;
     setSelectedFriendId(created.id);
     setNewFriendName('');
     setShowAddFriendInput(false);
@@ -75,13 +67,13 @@ export const AddItemScreen = () => {
 
   const handleSubmit = () => {
     if (!title.trim()) {
-      alert('Lütfen bir başlık veya açıklama girin!');
+      alert('Lütfen bir başlık girin.');
       return;
     }
 
     const selectedFriend = friends.find((f) => f.id === selectedFriendId) || friends[0];
     if (!selectedFriend) {
-      alert('Lütfen bir arkadaş seçin!');
+      alert('Lütfen bir kişi seçin.');
       return;
     }
 
@@ -89,25 +81,25 @@ export const AddItemScreen = () => {
     if (recordType === 'debt') {
       const parsed = parseFloat(amount);
       if (!parsed || parsed <= 0) {
-        alert('Lütfen geçerli bir borç tutarı girin!');
+        alert('Geçerli bir tutar giriniz.');
         return;
       }
       finalAmount = splitMode === 'split' ? Math.round(parsed / splitCount) : parsed;
     }
 
-    const itemIcon = recordType === 'item' 
-      ? (categories.find(c => c.label === category)?.icon || 'bag-personal')
+    const itemIcon = recordType === 'item'
+      ? (categories.find(c => c.label === category)?.icon || 'package-variant')
       : 'cash-multiple';
 
     addItem({
       type: recordType,
       title: title.trim(),
-      category: recordType === 'item' ? category : 'Hesap / Borç',
+      category: recordType === 'item' ? category : 'Harcama',
       icon: itemIcon,
       friendId: selectedFriend.id,
       friendName: selectedFriend.name,
       amount: finalAmount,
-      urgency: recordType === 'item' ? urgency : 'Yüksek 💸',
+      urgency: recordType === 'item' ? urgency : 'Standart',
       notes: notes.trim(),
       dueDate: getCalculatedDueDate(),
     });
@@ -117,45 +109,32 @@ export const AddItemScreen = () => {
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <TouchableOpacity
-          style={styles.backButton}
+          style={styles.backBtn}
           onPress={() => setCurrentScreen('dashboard')}
         >
-          <MaterialCommunityIcons name="arrow-left" size={24} color={THEME.colors.textPrimary} />
+          <MaterialCommunityIcons name="arrow-left" size={20} color={THEME.colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Yeni Helallesh Kaydı</Text>
-        <View style={{ width: 40 }} />
+        <Text style={styles.headerTitle}>Yeni Kayıt</Text>
+        <View style={{ width: 34 }} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Record Type Switcher */}
-        <View style={styles.typeSwitcher}>
+        {/* Clean Segmented Mode Switcher */}
+        <View style={styles.modeSwitcher}>
           <TouchableOpacity
-            style={[styles.switchOption, recordType === 'item' && styles.activeItemSwitch]}
-            activeOpacity={0.8}
+            style={[styles.modeTab, recordType === 'item' && styles.activeModeTab]}
             onPress={() => setRecordType('item')}
           >
-            <MaterialCommunityIcons
-              name="bag-personal"
-              size={18}
-              color={recordType === 'item' ? '#FFFFFF' : THEME.colors.textMuted}
-            />
-            <Text style={[styles.switchText, recordType === 'item' && styles.activeSwitchText]}>
+            <Text style={[styles.modeText, recordType === 'item' && styles.activeModeText]}>
               Emanet Eşya
             </Text>
           </TouchableOpacity>
-
           <TouchableOpacity
-            style={[styles.switchOption, recordType === 'debt' && styles.activeDebtSwitch]}
-            activeOpacity={0.8}
+            style={[styles.modeTab, recordType === 'debt' && styles.activeModeTab]}
             onPress={() => setRecordType('debt')}
           >
-            <MaterialCommunityIcons
-              name="cash-multiple"
-              size={18}
-              color={recordType === 'debt' ? '#FFFFFF' : THEME.colors.textMuted}
-            />
-            <Text style={[styles.switchText, recordType === 'debt' && styles.activeSwitchText]}>
-              Borç / Ortak Hesap
+            <Text style={[styles.modeText, recordType === 'debt' && styles.activeModeText]}>
+              Borç & Hesap
             </Text>
           </TouchableOpacity>
         </View>
@@ -163,28 +142,24 @@ export const AddItemScreen = () => {
         {/* Title Input */}
         <View style={styles.formGroup}>
           <Text style={styles.fieldLabel}>
-            {recordType === 'item' ? 'Emanet Eşya Nedir?' : 'Harcama / Borç Konusu'}
+            {recordType === 'item' ? 'Eşya Tanımı' : 'Harcama / Borç Konusu'}
           </Text>
           <TextInput
-            style={styles.input}
-            placeholder={
-              recordType === 'item'
-                ? 'Örn: Siyah Nike Hoodie, 67W Şarj Başlığı...'
-                : 'Örn: Kadıköy Döner Hesabı, Steam Oyunu...'
-            }
+            style={styles.textInput}
+            placeholder={recordType === 'item' ? 'Örn: Siyah Nike Hoodie' : 'Örn: Akşam Yemeği Payı'}
             placeholderTextColor={THEME.colors.textMuted}
             value={title}
             onChangeText={setTitle}
           />
         </View>
 
-        {/* Debt Amount and Split Calculator (Only for Debt) */}
+        {/* Amount & Split (Debt Only) */}
         {recordType === 'debt' && (
-          <View style={styles.debtBox}>
+          <View style={styles.debtContainer}>
             <View style={styles.formGroup}>
-              <Text style={styles.fieldLabel}>Toplam Tutar (₺)</Text>
+              <Text style={styles.fieldLabel}>Tutar (₺)</Text>
               <TextInput
-                style={[styles.input, styles.amountInput]}
+                style={[styles.textInput, styles.amountInput]}
                 placeholder="0"
                 placeholderTextColor={THEME.colors.textMuted}
                 keyboardType="numeric"
@@ -193,47 +168,46 @@ export const AddItemScreen = () => {
               />
             </View>
 
-            {/* Split Mode Toggle */}
             <View style={styles.splitToggleRow}>
               <TouchableOpacity
-                style={[styles.splitBtn, splitMode === 'direct' && styles.splitBtnActive]}
+                style={[styles.splitBtn, splitMode === 'direct' && styles.activeSplitBtn]}
                 onPress={() => setSplitMode('direct')}
               >
-                <Text style={[styles.splitBtnText, splitMode === 'direct' && styles.splitBtnTextActive]}>
-                  Direkt Borç (Alacak)
+                <Text style={[styles.splitBtnText, splitMode === 'direct' && styles.activeSplitBtnText]}>
+                  Birebir Borç
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.splitBtn, splitMode === 'split' && styles.splitBtnActive]}
+                style={[styles.splitBtn, splitMode === 'split' && styles.activeSplitBtn]}
                 onPress={() => setSplitMode('split')}
               >
-                <Text style={[styles.splitBtnText, splitMode === 'split' && styles.splitBtnTextActive]}>
-                  Ortak Hesap Bölüş
+                <Text style={[styles.splitBtnText, splitMode === 'split' && styles.activeSplitBtnText]}>
+                  Ortak Bölüş
                 </Text>
               </TouchableOpacity>
             </View>
 
             {splitMode === 'split' && (
-              <View style={styles.splitCounterRow}>
-                <Text style={styles.splitCounterLabel}>Masada Kaç Kişiyiz?</Text>
-                <View style={styles.stepperWrapper}>
+              <View style={styles.stepperContainer}>
+                <Text style={styles.stepperLabel}>Kişi Sayısı</Text>
+                <View style={styles.stepperRow}>
                   <TouchableOpacity
-                    style={styles.stepBtn}
+                    style={styles.stepButton}
                     onPress={() => setSplitCount(Math.max(2, splitCount - 1))}
                   >
-                    <Text style={styles.stepBtnText}>-</Text>
+                    <Text style={styles.stepBtnText}>−</Text>
                   </TouchableOpacity>
                   <Text style={styles.stepCountText}>{splitCount} Kişi</Text>
                   <TouchableOpacity
-                    style={styles.stepBtn}
+                    style={styles.stepButton}
                     onPress={() => setSplitCount(splitCount + 1)}
                   >
                     <Text style={styles.stepBtnText}>+</Text>
                   </TouchableOpacity>
                 </View>
                 {amount ? (
-                  <Text style={styles.perPersonCalculation}>
-                    Kişi başı düşen alacak: <Text style={styles.perPersonBold}>{formatCurrency(Math.round(parseFloat(amount) / splitCount))}</Text>
+                  <Text style={styles.splitResult}>
+                    Kişi başı pay: <Text style={styles.splitBold}>{formatCurrency(Math.round(parseFloat(amount) / splitCount))}</Text>
                   </Text>
                 ) : null}
               </View>
@@ -241,25 +215,25 @@ export const AddItemScreen = () => {
           </View>
         )}
 
-        {/* Category Selection (Only for Item) */}
+        {/* Categories (Item Only) */}
         {recordType === 'item' && (
           <View style={styles.formGroup}>
-            <Text style={styles.fieldLabel}>Eşya Kategorisi</Text>
-            <View style={styles.chipsWrap}>
+            <Text style={styles.fieldLabel}>Kategori</Text>
+            <View style={styles.chipsRow}>
               {categories.map((cat) => {
                 const isSelected = category === cat.label;
                 return (
                   <TouchableOpacity
                     key={cat.label}
-                    style={[styles.chip, isSelected && styles.activeChip]}
+                    style={[styles.categoryChip, isSelected && styles.activeCategoryChip]}
                     onPress={() => setCategory(cat.label)}
                   >
                     <MaterialCommunityIcons
                       name={cat.icon}
-                      size={16}
-                      color={isSelected ? '#FFFFFF' : THEME.colors.textSecondary}
+                      size={15}
+                      color={isSelected ? THEME.colors.primary : THEME.colors.textMuted}
                     />
-                    <Text style={[styles.chipText, isSelected && styles.activeChipText]}>
+                    <Text style={[styles.categoryChipText, isSelected && styles.activeCategoryChipText]}>
                       {cat.label}
                     </Text>
                   </TouchableOpacity>
@@ -271,13 +245,11 @@ export const AddItemScreen = () => {
 
         {/* Friend Selector */}
         <View style={styles.formGroup}>
-          <View style={styles.fieldLabelRow}>
-            <Text style={styles.fieldLabel}>Kime Verildi? (Kanka)</Text>
-            <TouchableOpacity
-              onPress={() => setShowAddFriendInput(!showAddFriendInput)}
-            >
-              <Text style={styles.linkText}>
-                {showAddFriendInput ? 'Vazgeç' : '+ Yeni Kanka Ekle'}
+          <View style={styles.labelHeaderRow}>
+            <Text style={styles.fieldLabel}>Muhatap Kişi</Text>
+            <TouchableOpacity onPress={() => setShowAddFriendInput(!showAddFriendInput)}>
+              <Text style={styles.actionLinkText}>
+                {showAddFriendInput ? 'Vazgeç' : '+ Yeni Kişi'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -285,22 +257,22 @@ export const AddItemScreen = () => {
           {showAddFriendInput && (
             <View style={styles.newFriendRow}>
               <TextInput
-                style={[styles.input, { flex: 1 }]}
-                placeholder="Arkadaşın Adı Soyadı..."
+                style={[styles.textInput, { flex: 1 }]}
+                placeholder="İsim Soyisim..."
                 placeholderTextColor={THEME.colors.textMuted}
                 value={newFriendName}
                 onChangeText={setNewFriendName}
               />
               <TouchableOpacity
-                style={styles.saveFriendBtn}
+                style={styles.addFriendSaveBtn}
                 onPress={handleAddNewFriend}
               >
-                <Text style={styles.saveFriendBtnText}>Ekle</Text>
+                <Text style={styles.addFriendSaveText}>Ekle</Text>
               </TouchableOpacity>
             </View>
           )}
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.friendsScroll}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.friendsRow}>
             {friends.map((fr) => {
               const isSelected = selectedFriendId === fr.id;
               return (
@@ -309,27 +281,30 @@ export const AddItemScreen = () => {
                   style={[styles.friendCard, isSelected && styles.selectedFriendCard]}
                   onPress={() => setSelectedFriendId(fr.id)}
                 >
-                  <Text style={styles.friendAvatar}>{fr.avatar}</Text>
-                  <Text style={[styles.friendName, isSelected && styles.selectedFriendName]} numberOfLines={1}>
-                    {fr.name}
+                  <View style={[styles.avatarBox, isSelected && styles.selectedAvatarBox]}>
+                    <Text style={[styles.avatarText, isSelected && styles.selectedAvatarText]}>
+                      {fr.avatar.length <= 2 ? fr.avatar : fr.name.slice(0, 2).toUpperCase()}
+                    </Text>
+                  </View>
+                  <Text style={[styles.friendNameText, isSelected && styles.selectedFriendName]} numberOfLines={1}>
+                    {fr.name.split(' ')[0]}
                   </Text>
-                  <Text style={styles.friendScore}>Puan: {fr.score}</Text>
                 </TouchableOpacity>
               );
             })}
           </ScrollView>
         </View>
 
-        {/* Expected Due Date Duration */}
+        {/* Duration / Expected Due Date */}
         <View style={styles.formGroup}>
-          <Text style={styles.fieldLabel}>Ne Zaman Helalleşilecek? (Süre)</Text>
+          <Text style={styles.fieldLabel}>Geri Dönüş Süresi</Text>
           <View style={styles.durationRow}>
             {durationOptions.map((opt) => {
               const isSelected = daysOption === opt.days;
               return (
                 <TouchableOpacity
                   key={opt.days}
-                  style={[styles.durationChip, isSelected && styles.activeDurationChip]}
+                  style={[styles.durationTab, isSelected && styles.activeDurationTab]}
                   onPress={() => setDaysOption(opt.days)}
                 >
                   <Text style={[styles.durationText, isSelected && styles.activeDurationText]}>
@@ -339,29 +314,26 @@ export const AddItemScreen = () => {
               );
             })}
           </View>
-          <Text style={styles.dateInfoText}>
-            Hedef Tarih: <Text style={styles.dateBold}>{getCalculatedDueDate()}</Text>
+          <Text style={styles.dueDateHelper}>
+            Teslim Tarihi: <Text style={{ fontWeight: '700', color: THEME.colors.textPrimary }}>{getCalculatedDueDate()}</Text>
           </Text>
         </View>
 
-        {/* Urgency Level (For Items) */}
+        {/* Urgency (Item Only) */}
         {recordType === 'item' && (
           <View style={styles.formGroup}>
-            <Text style={styles.fieldLabel}>Aciliyet & Göz Hakkı Seviyesi</Text>
-            <View style={styles.urgencyGrid}>
+            <Text style={styles.fieldLabel}>Önem Derecesi</Text>
+            <View style={styles.urgencyRow}>
               {urgencyOptions.map((u) => {
-                const isSelected = urgency === u.label;
+                const isSelected = urgency === u;
                 return (
                   <TouchableOpacity
-                    key={u.label}
-                    style={[
-                      styles.urgencyChip,
-                      isSelected && { borderColor: u.color, backgroundColor: `${u.color}22` },
-                    ]}
-                    onPress={() => setUrgency(u.label)}
+                    key={u}
+                    style={[styles.urgencyTab, isSelected && styles.activeUrgencyTab]}
+                    onPress={() => setUrgency(u)}
                   >
-                    <Text style={[styles.urgencyLabel, isSelected && { color: u.color, fontWeight: '800' }]}>
-                      {u.label}
+                    <Text style={[styles.urgencyText, isSelected && styles.activeUrgencyText]}>
+                      {u}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -370,30 +342,27 @@ export const AddItemScreen = () => {
           </View>
         )}
 
-        {/* Notes Input */}
+        {/* Notes */}
         <View style={styles.formGroup}>
-          <Text style={styles.fieldLabel}>Özel Not / Durum (Opsiyonel)</Text>
+          <Text style={styles.fieldLabel}>Açıklama / Not</Text>
           <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="Örn: Halı sahada giydi, yarın derste getirecek..."
+            style={[styles.textInput, styles.notesInput]}
+            placeholder="Kayıtla ilgili hatırlatıcı kısa not..."
             placeholderTextColor={THEME.colors.textMuted}
             multiline
-            numberOfLines={3}
+            numberOfLines={2}
             value={notes}
             onChangeText={setNotes}
           />
         </View>
 
-        {/* Submit Button */}
+        {/* Save Button */}
         <TouchableOpacity
-          style={styles.submitButton}
+          style={styles.saveRecordBtn}
           activeOpacity={0.85}
           onPress={handleSubmit}
         >
-          <MaterialCommunityIcons name="check" size={22} color="#FFFFFF" />
-          <Text style={styles.submitButtonText}>
-            {recordType === 'item' ? 'Emanet Kaydını Aç' : 'Borç Kaydını Aç'}
-          </Text>
+          <Text style={styles.saveRecordBtnText}>Kaydı Oluştur</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -410,329 +379,319 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: THEME.spacing.sm,
-    marginBottom: THEME.spacing.sm,
+    paddingVertical: 12,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+  backBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: THEME.borderRadius.sm,
     backgroundColor: THEME.colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
+    borderColor: THEME.colors.border,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 16,
+    fontWeight: '700',
     color: THEME.colors.textPrimary,
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 30,
   },
-  typeSwitcher: {
+  modeSwitcher: {
     flexDirection: 'row',
-    backgroundColor: THEME.colors.surface,
-    borderRadius: THEME.borderRadius.lg,
-    padding: 4,
-    marginBottom: THEME.spacing.md,
-    borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: THEME.colors.surfaceSubtle,
+    borderRadius: THEME.borderRadius.sm,
+    padding: 3,
+    marginBottom: 16,
   },
-  switchOption: {
+  modeTab: {
     flex: 1,
-    flexDirection: 'row',
+    paddingVertical: 8,
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 10,
-    borderRadius: THEME.borderRadius.md,
+    borderRadius: THEME.borderRadius.xs,
   },
-  activeItemSwitch: {
-    backgroundColor: THEME.colors.amber,
+  activeModeTab: {
+    backgroundColor: THEME.colors.surface,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  activeDebtSwitch: {
-    backgroundColor: THEME.colors.emerald,
-  },
-  switchText: {
+  modeText: {
     fontSize: 13,
-    fontWeight: '700',
-    color: THEME.colors.textMuted,
+    fontWeight: '500',
+    color: THEME.colors.textSecondary,
   },
-  activeSwitchText: {
-    color: '#FFFFFF',
+  activeModeText: {
+    color: THEME.colors.textPrimary,
+    fontWeight: '700',
   },
   formGroup: {
-    marginBottom: THEME.spacing.md,
+    marginBottom: 14,
   },
-  fieldLabelRow: {
+  fieldLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: THEME.colors.textSecondary,
+    marginBottom: 6,
+  },
+  labelHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 6,
   },
-  fieldLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: THEME.colors.textSecondary,
-    marginBottom: 6,
-  },
-  linkText: {
+  actionLinkText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: THEME.colors.primaryLight,
+    fontWeight: '600',
+    color: THEME.colors.accent,
   },
-  input: {
+  textInput: {
+    backgroundColor: THEME.colors.surface,
+    borderRadius: THEME.borderRadius.sm,
+    borderWidth: 1,
+    borderColor: THEME.colors.border,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 13,
+    color: THEME.colors.textPrimary,
+  },
+  amountInput: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  debtContainer: {
     backgroundColor: THEME.colors.surface,
     borderRadius: THEME.borderRadius.md,
     borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    color: THEME.colors.textPrimary,
-    fontSize: 14,
-  },
-  amountInput: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: THEME.colors.emerald,
-  },
-  debtBox: {
-    backgroundColor: 'rgba(16, 185, 129, 0.05)',
-    borderRadius: THEME.borderRadius.lg,
+    borderColor: THEME.colors.border,
     padding: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.2)',
-    marginBottom: THEME.spacing.md,
+    marginBottom: 14,
   },
   splitToggleRow: {
     flexDirection: 'row',
     gap: 8,
+    marginTop: 4,
     marginBottom: 10,
   },
   splitBtn: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 7,
     alignItems: 'center',
-    backgroundColor: THEME.colors.surface,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
+    borderRadius: THEME.borderRadius.xs,
+    backgroundColor: THEME.colors.surfaceSubtle,
   },
-  splitBtnActive: {
-    backgroundColor: THEME.colors.emerald,
-    borderColor: THEME.colors.emerald,
+  activeSplitBtn: {
+    backgroundColor: THEME.colors.primary,
   },
   splitBtnText: {
     fontSize: 11,
-    fontWeight: '700',
-    color: THEME.colors.textMuted,
-  },
-  splitBtnTextActive: {
-    color: '#FFFFFF',
-  },
-  splitCounterRow: {
-    marginTop: 6,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  splitCounterLabel: {
-    fontSize: 12,
     fontWeight: '600',
     color: THEME.colors.textSecondary,
+  },
+  activeSplitBtnText: {
+    color: '#FFFFFF',
+  },
+  stepperContainer: {
+    borderTopWidth: 1,
+    borderTopColor: THEME.colors.borderSubtle,
+    paddingTop: 10,
+  },
+  stepperLabel: {
+    fontSize: 11,
+    color: THEME.colors.textMuted,
     marginBottom: 6,
   },
-  stepperWrapper: {
+  stepperRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  stepBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
-    backgroundColor: THEME.colors.surfaceLight,
+  stepButton: {
+    width: 32,
+    height: 32,
+    borderRadius: THEME.borderRadius.xs,
+    backgroundColor: THEME.colors.surfaceSubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
   stepBtnText: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  stepCountText: {
-    fontSize: 14,
-    fontWeight: '800',
+    fontSize: 16,
+    fontWeight: '700',
     color: THEME.colors.textPrimary,
   },
-  perPersonCalculation: {
+  stepCountText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: THEME.colors.textPrimary,
+  },
+  splitResult: {
     fontSize: 12,
-    color: THEME.colors.textMuted,
+    color: THEME.colors.textSecondary,
     marginTop: 8,
   },
-  perPersonBold: {
-    color: THEME.colors.emerald,
-    fontWeight: '800',
+  splitBold: {
+    fontWeight: '700',
+    color: THEME.colors.textPrimary,
   },
-  chipsWrap: {
+  chipsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
   },
-  chip: {
+  categoryChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     backgroundColor: THEME.colors.surface,
-    borderRadius: THEME.borderRadius.md,
+    borderRadius: THEME.borderRadius.xs,
     borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    borderColor: THEME.colors.border,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
   },
-  activeChip: {
-    backgroundColor: THEME.colors.primary,
-    borderColor: THEME.colors.primaryLight,
+  activeCategoryChip: {
+    borderColor: THEME.colors.primary,
+    backgroundColor: THEME.colors.surfaceSubtle,
   },
-  chipText: {
-    fontSize: 12,
-    fontWeight: '600',
+  categoryChipText: {
+    fontSize: 11,
+    fontWeight: '500',
     color: THEME.colors.textSecondary,
   },
-  activeChipText: {
-    color: '#FFFFFF',
+  activeCategoryChipText: {
+    color: THEME.colors.textPrimary,
     fontWeight: '700',
   },
   newFriendRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 10,
+    gap: 6,
+    marginBottom: 8,
   },
-  saveFriendBtn: {
+  addFriendSaveBtn: {
     backgroundColor: THEME.colors.primary,
-    borderRadius: THEME.borderRadius.md,
-    paddingHorizontal: 16,
+    borderRadius: THEME.borderRadius.sm,
+    paddingHorizontal: 14,
     justifyContent: 'center',
-    alignItems: 'center',
   },
-  saveFriendBtnText: {
+  addFriendSaveText: {
     color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 13,
+    fontWeight: '600',
+    fontSize: 12,
   },
-  friendsScroll: {
-    gap: 10,
-    paddingVertical: 4,
+  friendsRow: {
+    gap: 8,
+    paddingVertical: 2,
   },
   friendCard: {
-    width: 90,
-    backgroundColor: THEME.colors.surface,
-    borderRadius: THEME.borderRadius.md,
-    padding: 10,
     alignItems: 'center',
+    width: 64,
+  },
+  avatarBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: THEME.colors.surfaceSubtle,
     borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
-  },
-  selectedFriendCard: {
-    borderColor: THEME.colors.primaryLight,
-    backgroundColor: 'rgba(99, 102, 241, 0.15)',
-  },
-  friendAvatar: {
-    fontSize: 24,
+    borderColor: THEME.colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 4,
   },
-  friendName: {
-    fontSize: 11,
+  selectedAvatarBox: {
+    backgroundColor: THEME.colors.primary,
+    borderColor: THEME.colors.primary,
+  },
+  avatarText: {
+    fontSize: 12,
     fontWeight: '700',
     color: THEME.colors.textSecondary,
+  },
+  selectedAvatarText: {
+    color: '#FFFFFF',
+  },
+  friendNameText: {
+    fontSize: 11,
+    color: THEME.colors.textMuted,
     textAlign: 'center',
   },
   selectedFriendName: {
-    color: '#FFFFFF',
-  },
-  friendScore: {
-    fontSize: 9,
-    color: THEME.colors.textMuted,
-    marginTop: 2,
+    color: THEME.colors.textPrimary,
+    fontWeight: '700',
   },
   durationRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
   },
-  durationChip: {
+  durationTab: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 8,
     alignItems: 'center',
     backgroundColor: THEME.colors.surface,
-    borderRadius: THEME.borderRadius.md,
+    borderRadius: THEME.borderRadius.xs,
     borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
+    borderColor: THEME.colors.border,
   },
-  activeDurationChip: {
+  activeDurationTab: {
     backgroundColor: THEME.colors.primary,
-    borderColor: THEME.colors.primaryLight,
+    borderColor: THEME.colors.primary,
   },
   durationText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: THEME.colors.textMuted,
+    fontSize: 11,
+    fontWeight: '500',
+    color: THEME.colors.textSecondary,
   },
   activeDurationText: {
     color: '#FFFFFF',
+    fontWeight: '700',
   },
-  dateInfoText: {
+  dueDateHelper: {
     fontSize: 11,
     color: THEME.colors.textMuted,
     marginTop: 6,
   },
-  dateBold: {
-    color: THEME.colors.textPrimary,
-    fontWeight: '700',
-  },
-  urgencyGrid: {
+  urgencyRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
   },
-  urgencyChip: {
+  urgencyTab: {
     flex: 1,
-    minWidth: '45%',
-    backgroundColor: THEME.colors.surface,
-    borderRadius: THEME.borderRadius.md,
-    borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
-    paddingVertical: 10,
+    paddingVertical: 7,
     alignItems: 'center',
+    backgroundColor: THEME.colors.surface,
+    borderRadius: THEME.borderRadius.xs,
+    borderWidth: 1,
+    borderColor: THEME.colors.border,
   },
-  urgencyLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+  activeUrgencyTab: {
+    backgroundColor: THEME.colors.primary,
+    borderColor: THEME.colors.primary,
+  },
+  urgencyText: {
+    fontSize: 11,
+    fontWeight: '500',
     color: THEME.colors.textSecondary,
   },
-  textArea: {
-    minHeight: 70,
-    textAlignVertical: 'top',
+  activeUrgencyText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
-  submitButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
+  notesInput: {
+    minHeight: 50,
+  },
+  saveRecordBtn: {
     backgroundColor: THEME.colors.primary,
-    borderRadius: THEME.borderRadius.lg,
-    paddingVertical: 16,
+    borderRadius: THEME.borderRadius.sm,
+    paddingVertical: 13,
+    alignItems: 'center',
     marginTop: 8,
-    shadowColor: THEME.colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
   },
-  submitButtonText: {
-    fontSize: 15,
-    fontWeight: '800',
+  saveRecordBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
     color: '#FFFFFF',
   },
 });

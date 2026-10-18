@@ -33,21 +33,24 @@ function MainNavigator() {
     }
   };
 
-  // Hide bottom bar on modal-like forms if preferred, or keep for easy navigation
   const showBottomNav = currentScreen !== 'detail';
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="light" />
-      {currentScreen !== 'add' && currentScreen !== 'detail' && <Header />}
-      
-      <View style={styles.contentContainer}>
-        {renderScreen()}
-      </View>
+    <View style={styles.webOuterWrapper}>
+      <View style={styles.phoneContainer}>
+        <SafeAreaView style={styles.safeArea}>
+          <StatusBar style="dark" />
+          {currentScreen !== 'add' && currentScreen !== 'detail' && <Header />}
+          
+          <View style={styles.contentContainer}>
+            {renderScreen()}
+          </View>
 
-      {showBottomNav && <BottomNavigation />}
-      <TebligatModal />
-    </SafeAreaView>
+          {showBottomNav && <BottomNavigation />}
+          <TebligatModal />
+        </SafeAreaView>
+      </View>
+    </View>
   );
 }
 
@@ -62,10 +65,32 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  webOuterWrapper: {
+    flex: 1,
+    backgroundColor: Platform.OS === 'web' ? '#F1F5F9' : THEME.colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  phoneContainer: {
+    flex: 1,
+    width: '100%',
+    maxWidth: Platform.OS === 'web' ? 440 : '100%',
+    backgroundColor: THEME.colors.background,
+    ...Platform.select({
+      web: {
+        height: '100vh',
+        maxHeight: 900,
+        boxShadow: '0 20px 40px -15px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.06)',
+        borderRadius: 24,
+        overflow: 'hidden',
+        marginVertical: 'auto',
+      },
+      default: {},
+    }),
+  },
   safeArea: {
     flex: 1,
     backgroundColor: THEME.colors.background,
-    paddingTop: Platform.OS === 'android' ? 30 : 0,
   },
   contentContainer: {
     flex: 1,
