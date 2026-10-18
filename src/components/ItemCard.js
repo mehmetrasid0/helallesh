@@ -8,6 +8,7 @@ import { useApp } from '../context/AppContext';
 export const ItemCard = ({ item }) => {
   const { setSelectedItemId, setCurrentScreen, resolveItem } = useApp();
   const isDebt = item.type === 'debt';
+  const isBorrowed = item.direction === 'borrowed'; // Ben aldım / Borçluyum
   const daysInfo = calculateDaysStatus(item.dueDate);
   const isOverdue = daysInfo.status === 'overdue' && !item.isResolved;
 
@@ -32,10 +33,23 @@ export const ItemCard = ({ item }) => {
         badgeBg: THEME.colors.dangerBg,
         badgeText: THEME.colors.dangerDark,
         badgeBorder: THEME.colors.dangerBorder,
-        badgeLabel: daysInfo.text,
+        badgeLabel: isBorrowed ? 'Ödemen Gecikti!' : daysInfo.text,
+      };
+    }
+    if (isBorrowed) {
+      // Ben borçluyum / Emanet bende
+      return {
+        stripeColor: '#EA580C',
+        iconBg: '#FFF7ED',
+        iconColor: '#EA580C',
+        badgeBg: '#FFF7ED',
+        badgeText: '#C2410C',
+        badgeBorder: '#FFEDD5',
+        badgeLabel: isDebt ? 'Borcun Var' : 'Emanet Sende',
       };
     }
     if (isDebt) {
+      // Alacağım var
       return {
         stripeColor: THEME.colors.purple,
         iconBg: THEME.colors.purpleBg,
@@ -46,7 +60,7 @@ export const ItemCard = ({ item }) => {
         badgeLabel: daysInfo.text,
       };
     }
-    // Default: Emanet Eşya (Blue)
+    // Emanet Eşya Verdim (Dışarıda)
     return {
       stripeColor: THEME.colors.blue,
       iconBg: THEME.colors.blueBg,
@@ -88,7 +102,16 @@ export const ItemCard = ({ item }) => {
         ) : (
           <View style={[styles.iconContainer, { backgroundColor: cardTheme.iconBg }]}>
             <MaterialCommunityIcons
-              name={item.icon || (isDebt ? 'receipt-text-outline' : 'package-variant')}
+              name={
+                item.icon ||
+                (isDebt
+                  ? isBorrowed
+                    ? 'arrow-top-right'
+                    : 'arrow-bottom-left'
+                  : isBorrowed
+                  ? 'package-down'
+                  : 'package-up')
+              }
               size={20}
               color={cardTheme.iconColor}
             />
@@ -98,11 +121,30 @@ export const ItemCard = ({ item }) => {
         {/* Middle Info Column */}
         <View style={styles.infoCol}>
           <View style={styles.headerMeta}>
-            <View style={styles.friendTag}>
-              <Text style={styles.friendName}>{item.friendName}</Text>
+            {/* Direction Pill (Verdim vs Aldım) */}
+            <View
+              style={[
+                styles.directionPill,
+                { backgroundColor: isBorrowed ? '#FFF7ED' : '#F1F5F9' },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.directionPillText,
+                  { color: isBorrowed ? '#EA580C' : THEME.colors.textPrimary },
+                ]}
+              >
+                {isBorrowed ? 'Borçlusun' : 'Alacaklısın'}
+              </Text>
             </View>
+
+            <Text style={styles.friendName}>
+              {isBorrowed ? `→ ${item.friendName}` : item.friendName}
+            </Text>
+
             <Text style={styles.dotSeparator}>•</Text>
             <Text style={styles.categoryName}>{item.category || (isDebt ? 'Harcama' : 'Eşya')}</Text>
+
             {item.imageUri ? (
               <View style={styles.photoProofTag}>
                 <MaterialCommunityIcons name="image-check" size={11} color={THEME.colors.purple} />
@@ -142,8 +184,17 @@ export const ItemCard = ({ item }) => {
         <View style={styles.rightCol}>
           {isDebt ? (
             <View style={styles.amountBox}>
-              <Text style={styles.amountText}>{formatCurrency(item.amount)}</Text>
-              {item.isSplit && <Text style={styles.splitSubtext}>bölüşüldü</Text>}
+              <Text
+                style={[
+                  styles.amountText,
+                  isBorrowed && { color: '#EA580C' },
+                ]}
+              >
+                {isBorrowed ? `-${formatCurrency(item.amount)}` : `+${formatCurrency(item.amount)}`}
+              </Text>
+              <Text style={styles.roleSubtext}>
+                {isBorrowed ? 'ödeyeceksin' : 'alacaksın'}
+              </Text>
             </View>
           ) : (
             <View style={styles.urgencyWrapper}>
@@ -166,12 +217,15 @@ export const ItemCard = ({ item }) => {
 
           {!item.isResolved && (
             <TouchableOpacity
-              style={styles.resolveActionBtn}
+              style={[
+                styles.resolveActionBtn,
+                isBorrowed && { backgroundColor: '#EA580C' },
+              ]}
               onPress={(e) => {
                 e.stopPropagation();
                 resolveItem(item.id);
               }}
-              accessibilityLabel="Helalleş"
+              accessibilityLabel={isBorrowed ? 'Ödedim' : 'Helalleştik'}
             >
               <MaterialCommunityIcons name="check" size={14} color="#FFFFFF" />
             </TouchableOpacity>
@@ -253,11 +307,15 @@ const styles = StyleSheet.create({
     gap: 5,
     marginBottom: 3,
   },
-  friendTag: {
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 6,
+  directionPill: {
+    paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: 4,
+  },
+  directionPillText: {
+    fontSize: 9,
+    fontWeight: '800',
+    textTransform: 'uppercase',
   },
   friendName: {
     fontSize: 11,
@@ -321,7 +379,7 @@ const styles = StyleSheet.create({
   rightCol: {
     alignItems: 'flex-end',
     justifyContent: 'space-between',
-    minWidth: 70,
+    minWidth: 72,
     gap: 6,
   },
   amountBox: {
@@ -333,9 +391,9 @@ const styles = StyleSheet.create({
     color: THEME.colors.textPrimary,
     letterSpacing: -0.4,
   },
-  splitSubtext: {
+  roleSubtext: {
     fontSize: 9,
-    color: THEME.colors.purple,
+    color: THEME.colors.textMuted,
     fontWeight: '600',
   },
   urgencyWrapper: {

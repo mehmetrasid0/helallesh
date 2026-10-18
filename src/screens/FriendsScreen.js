@@ -31,31 +31,42 @@ export const FriendsScreen = () => {
 
   const sortedFriends = [...friends].sort((a, b) => b.score - a.score);
 
-  // Send full account statement to Friend via WhatsApp / Share Sheet
-  const handleSendStatement = async (friend, friendActiveItems, loanCount, debtSum) => {
-    let msg = `📋 *HELALLESH AGALAR EKSTRESİ*\n-----------------------------------\n👤 *Aga:* ${friend.name}\n⭐ *Karma Sicili:* ${friend.score}/100\n\n`;
+  // Send two-way account statement to Friend via WhatsApp / Share Sheet
+  const handleSendStatement = async (friend, friendActiveItems, friendReceivable, friendPayable, friendNet, itemsLent, itemsBorrowed) => {
+    let msg = `📋 *HELALLESH AGALAR HESAP EKSTRESİ*\n-----------------------------------\n👤 *Aga:* ${friend.name}\n⭐ *Karma Sicili:* ${friend.score}/100\n\n`;
 
-    if (loanCount > 0) {
-      msg += `📦 *Sende Olan Emanetler:*\n`;
-      friendActiveItems
-        .filter((it) => it.type === 'item')
-        .forEach((it) => {
-          msg += `• ${it.title} (Vade: ${formatDate(it.dueDate)})\n`;
-        });
+    if (itemsLent.length > 0) {
+      msg += `📦 *Sende Olan Emanetlerim:*\n`;
+      itemsLent.forEach((it) => {
+        msg += `• ${it.title} (Vade: ${formatDate(it.dueDate)})\n`;
+      });
       msg += `\n`;
     }
 
-    if (debtSum > 0) {
-      msg += `💰 *Ortak Hesap / Borç Payı:*\n`;
-      friendActiveItems
-        .filter((it) => it.type === 'debt')
-        .forEach((it) => {
-          msg += `• ${it.title}: ${formatCurrency(it.amount)}\n`;
-        });
-      msg += `*Toplam Alacak:* ${formatCurrency(debtSum)}\n\n`;
+    if (itemsBorrowed.length > 0) {
+      msg += `📥 *Bende Olan Emanetlerin:*\n`;
+      itemsBorrowed.forEach((it) => {
+        msg += `• ${it.title} (Sağlam muhafaza ediliyor)\n`;
+      });
+      msg += `\n`;
     }
 
-    msg += `_Helallesh sistemi üzerinden oluşturulmuştur. Hak geçmesin, helalleşelim!_`;
+    if (friendReceivable > 0) {
+      msg += `💰 *Bana Olan Borcun:* ${formatCurrency(friendReceivable)}\n`;
+    }
+    if (friendPayable > 0) {
+      msg += `💸 *Sana Olan Borcum:* ${formatCurrency(friendPayable)}\n`;
+    }
+
+    if (friendNet > 0) {
+      msg += `\n⚖️ *NET DURUM:* Bana ${formatCurrency(friendNet)} göndereceksin.\n`;
+    } else if (friendNet < 0) {
+      msg += `\n⚖️ *NET DURUM:* Sana ${formatCurrency(Math.abs(friendNet))} borcum var, en kısa sürede kapatacağım.\n`;
+    } else if (friendReceivable > 0 && friendPayable > 0) {
+      msg += `\n⚖️ *NET DURUM:* Hesaplar tam denk, helalleştik!\n`;
+    }
+
+    msg += `\n_Helallesh sistemi üzerinden oluşturulmuştur. Hak geçmesin, helalleşelim!_`;
 
     const encoded = encodeURIComponent(msg);
     const whatsappUrl = `whatsapp://send?text=${encoded}`;
@@ -81,8 +92,8 @@ export const FriendsScreen = () => {
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <View>
-          <Text style={styles.headerTitle}>Agalar Karnesi & Güven</Text>
-          <Text style={styles.headerSubtitle}>Kim ne kadar emanete sadık, kim çökücü?</Text>
+          <Text style={styles.headerTitle}>Agalar Karnesi & Net Denge</Text>
+          <Text style={styles.headerSubtitle}>Kim kime ne kadar borçlu, emanetler kimde?</Text>
         </View>
         <TouchableOpacity
           style={styles.addBtn}
@@ -141,12 +152,24 @@ export const FriendsScreen = () => {
           const friendActiveItems = items.filter(
             (it) => it.friendId === item.id && !it.isResolved
           );
-          const loanCount = friendActiveItems.filter((it) => it.type === 'item').length;
-          const debtSum = friendActiveItems
-            .filter((it) => it.type === 'debt')
+
+          // Emanetler: Onda olanlar vs Bende olanlar
+          const itemsLent = friendActiveItems.filter((it) => it.type === 'item' && it.direction !== 'borrowed');
+          const itemsBorrowed = friendActiveItems.filter((it) => it.type === 'item' && it.direction === 'borrowed');
+
+          // Borçlar: Onun bana borcu vs Benim ona borcum
+          const friendReceivable = friendActiveItems
+            .filter((it) => it.type === 'debt' && it.direction !== 'borrowed')
             .reduce((acc, cur) => acc + (Number(cur.amount) || 0), 0);
 
-          const hasPending = loanCount > 0 || debtSum > 0;
+          const friendPayable = friendActiveItems
+            .filter((it) => it.type === 'debt' && it.direction === 'borrowed')
+            .reduce((acc, cur) => acc + (Number(cur.amount) || 0), 0);
+
+          // Mahsuplaşma / Net Bakiye
+          const friendNet = friendReceivable - friendPayable;
+
+          const hasPending = friendActiveItems.length > 0;
 
           return (
             <View style={styles.card}>
@@ -177,21 +200,41 @@ export const FriendsScreen = () => {
                     </View>
                   </View>
 
+                  {/* Net Balance & Item Breakdown */}
                   <View style={styles.metaRow}>
-                    <View style={styles.metaItem}>
-                      <Text style={styles.metaLabel}>Emanet:</Text>
-                      <Text style={[styles.metaVal, loanCount > 0 && { color: THEME.colors.blue }]}>
-                        {loanCount > 0 ? `${loanCount} adet` : 'Yok'}
-                      </Text>
-                    </View>
-                    <Text style={styles.dot}>•</Text>
-                    <View style={styles.metaItem}>
-                      <Text style={styles.metaLabel}>Alacak:</Text>
-                      <Text style={[styles.metaVal, debtSum > 0 && { color: THEME.colors.purple }]}>
-                        {debtSum > 0 ? formatCurrency(debtSum) : '0 ₺'}
-                      </Text>
+                    <View style={styles.netPillBox}>
+                      {friendNet > 0 ? (
+                        <Text style={styles.netReceiveText}>
+                          Sana verecek: <Text style={{ fontWeight: '800' }}>{formatCurrency(friendNet)}</Text>
+                        </Text>
+                      ) : friendNet < 0 ? (
+                        <Text style={styles.netPayText}>
+                          Ona borcun: <Text style={{ fontWeight: '800' }}>{formatCurrency(Math.abs(friendNet))}</Text>
+                        </Text>
+                      ) : (
+                        <Text style={styles.netZeroText}>Para borcu yok (0 ₺)</Text>
+                      )}
                     </View>
                   </View>
+
+                  {/* Item counter */}
+                  {(itemsLent.length > 0 || itemsBorrowed.length > 0) && (
+                    <View style={styles.itemMetaRow}>
+                      {itemsLent.length > 0 && (
+                        <Text style={styles.itemMetaText}>
+                          📤 {itemsLent.length} eşyan onda
+                        </Text>
+                      )}
+                      {itemsLent.length > 0 && itemsBorrowed.length > 0 && (
+                        <Text style={styles.dot}>•</Text>
+                      )}
+                      {itemsBorrowed.length > 0 && (
+                        <Text style={styles.itemMetaText}>
+                          📥 {itemsBorrowed.length} eşyası sende
+                        </Text>
+                      )}
+                    </View>
+                  )}
                 </View>
 
                 <View style={styles.scoreBox}>
@@ -232,7 +275,7 @@ export const FriendsScreen = () => {
                 />
               </View>
 
-              {/* Action Buttons: View Records & Send Statement via WhatsApp */}
+              {/* Action Buttons: View Records & Send Two-Way Statement via WhatsApp */}
               <View style={styles.cardActionsRow}>
                 {hasPending ? (
                   <>
@@ -250,7 +293,17 @@ export const FriendsScreen = () => {
 
                     <TouchableOpacity
                       style={styles.actionBtnWhatsApp}
-                      onPress={() => handleSendStatement(item, friendActiveItems, loanCount, debtSum)}
+                      onPress={() =>
+                        handleSendStatement(
+                          item,
+                          friendActiveItems,
+                          friendReceivable,
+                          friendPayable,
+                          friendNet,
+                          itemsLent,
+                          itemsBorrowed
+                        )
+                      }
                     >
                       <MaterialCommunityIcons name="whatsapp" size={14} color="#FFFFFF" />
                       <Text style={styles.actionBtnWhatsAppText}>Ekstre Gönder</Text>
@@ -259,7 +312,7 @@ export const FriendsScreen = () => {
                 ) : (
                   <View style={styles.cleanRecordBox}>
                     <MaterialCommunityIcons name="shield-check" size={14} color={THEME.colors.success} />
-                    <Text style={styles.cleanRecordText}>Tertemiz sicil • Bekleyen emanet yok</Text>
+                    <Text style={styles.cleanRecordText}>Tertemiz sicil • Bekleyen alacak/borç yok</Text>
                   </View>
                 )}
               </View>
@@ -416,20 +469,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    marginTop: 2,
   },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
+  netPillBox: {
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
-  metaLabel: {
+  netReceiveText: {
+    fontSize: 11,
+    color: '#059669',
+    fontWeight: '600',
+  },
+  netPayText: {
+    fontSize: 11,
+    color: '#EA580C',
+    fontWeight: '600',
+  },
+  netZeroText: {
     fontSize: 11,
     color: THEME.colors.textMuted,
+    fontWeight: '500',
   },
-  metaVal: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: THEME.colors.textPrimary,
+  itemMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  itemMetaText: {
+    fontSize: 10,
+    color: THEME.colors.textMuted,
+    fontWeight: '600',
   },
   dot: {
     fontSize: 10,

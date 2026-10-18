@@ -12,7 +12,7 @@ export const AppProvider = ({ children }) => {
   // Navigation & UI state
   const [currentScreen, setCurrentScreen] = useState('dashboard'); // 'dashboard', 'add', 'detail', 'friends', 'stats'
   const [selectedItemId, setSelectedItemId] = useState(null);
-  const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'item', 'debt', 'overdue'
+  const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'receivable', 'payable', 'item', 'overdue', 'resolved'
   const [searchQuery, setSearchQuery] = useState('');
   
   // Tebligat Modal state
@@ -43,11 +43,12 @@ export const AppProvider = ({ children }) => {
     });
   };
 
-  // Add Item / Debt
+  // Add Item / Debt (supports direction: 'lent' or 'borrowed')
   const addItem = (itemData) => {
     const newItem = {
       ...itemData,
       id: `${itemData.type}_${Date.now()}`,
+      direction: itemData.direction || 'lent', // 'lent' (Ben Verdim) or 'borrowed' (Ben Aldım)
       isResolved: false,
       resolvedDate: null,
       givenDate: itemData.givenDate || new Date().toISOString().split('T')[0],
@@ -79,7 +80,7 @@ export const AppProvider = ({ children }) => {
       return it;
     });
 
-    // Update friend score (+10 if timely, +3 if overdue)
+    // Update friend score (+8 if timely, +3 if overdue)
     let updatedFriends = [...friends];
     if (resolvedFriendId) {
       const delta = wasOverdue ? 3 : 8;
@@ -117,7 +118,7 @@ export const AppProvider = ({ children }) => {
       name,
       phone,
       avatar: randomAvatar,
-      score: 75, // Starting score
+      score: 75,
     };
     const updated = [...friends, newFriend];
     setFriends(updated);
@@ -133,21 +134,32 @@ export const AppProvider = ({ children }) => {
     setCurrentScreen('dashboard');
   };
 
-  // Computed Stats
+  // Computed Two-Way Stats
   const activeItems = items.filter((it) => !it.isResolved);
   const resolvedItems = items.filter((it) => it.isResolved);
   
   const todayStr = new Date().toISOString().split('T')[0];
   const overdueCount = activeItems.filter((it) => it.dueDate && it.dueDate < todayStr).length;
 
+  // Alacaklarım (Agaların bana borcu)
   const totalReceivable = activeItems
-    .filter((it) => it.type === 'debt')
+    .filter((it) => it.type === 'debt' && it.direction !== 'borrowed')
     .reduce((acc, cur) => acc + (Number(cur.amount) || 0), 0);
 
-  const totalActiveLoansCount = activeItems.filter((it) => it.type === 'item').length;
+  // Borçlarım (Benim agalara borcum)
+  const totalPayable = activeItems
+    .filter((it) => it.type === 'debt' && it.direction === 'borrowed')
+    .reduce((acc, cur) => acc + (Number(cur.amount) || 0), 0);
+
+  // Net Bakiye
+  const netBalance = totalReceivable - totalPayable;
+
+  // Emanetler: Dışarıdakiler (Verdiklerim) vs Bendedekiler (Aldıklarım)
+  const lentItemsCount = activeItems.filter((it) => it.type === 'item' && it.direction !== 'borrowed').length;
+  const borrowedItemsCount = activeItems.filter((it) => it.type === 'item' && it.direction === 'borrowed').length;
 
   const totalRecoveredMoney = resolvedItems
-    .filter((it) => it.type === 'debt')
+    .filter((it) => it.type === 'debt' && it.direction !== 'borrowed')
     .reduce((acc, cur) => acc + (Number(cur.amount) || 0), 0);
 
   const selectedItem = items.find((it) => it.id === selectedItemId);
@@ -176,7 +188,11 @@ export const AppProvider = ({ children }) => {
         setTebligatItem,
         stats: {
           totalReceivable,
-          totalActiveLoansCount,
+          totalPayable,
+          netBalance,
+          lentItemsCount,
+          borrowedItemsCount,
+          totalActiveLoansCount: lentItemsCount + borrowedItemsCount,
           overdueCount,
           totalResolvedCount: resolvedItems.length,
           totalRecoveredMoney,

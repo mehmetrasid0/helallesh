@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  Alert,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -18,14 +17,16 @@ import { formatCurrency } from '../utils/helpers';
 export const AddItemScreen = () => {
   const { friends, addItem, addFriend, setCurrentScreen } = useApp();
 
-  const [recordType, setRecordType] = useState('item'); // 'item' (Emanet Eşya) or 'debt' (Borç / Ortak Hesap)
+  // Two-way Direction: 'lent' (Ben Verdim / Alacağım) vs 'borrowed' (Ben Aldım / Borçluyum)
+  const [direction, setDirection] = useState('lent');
+  const [recordType, setRecordType] = useState('item'); // 'item' or 'debt'
   const [title, setTitle] = useState('');
   const [selectedFriendId, setSelectedFriendId] = useState(friends[0]?.id || '');
   const [newFriendName, setNewFriendName] = useState('');
   const [showAddFriendInput, setShowAddFriendInput] = useState(false);
   const [notes, setNotes] = useState('');
   const [daysOption, setDaysOption] = useState(7);
-  const [imageUri, setImageUri] = useState(null); // Proof photo / receipt
+  const [imageUri, setImageUri] = useState(null);
 
   // Item specific
   const [category, setCategory] = useState('Giyim');
@@ -33,7 +34,7 @@ export const AddItemScreen = () => {
 
   // Debt specific
   const [amount, setAmount] = useState('');
-  const [splitMode, setSplitMode] = useState('direct'); // 'direct' or 'split'
+  const [splitMode, setSplitMode] = useState('direct');
   const [splitCount, setSplitCount] = useState(2);
 
   const categories = [
@@ -70,7 +71,7 @@ export const AddItemScreen = () => {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        alert('Kamera izni gerekiyor. Lütfen ayarlardan izin verin.');
+        alert('Kamera izni gerekiyor.');
         return;
       }
       const result = await ImagePicker.launchCameraAsync({
@@ -86,7 +87,7 @@ export const AddItemScreen = () => {
     }
   };
 
-  // Gallery Picker Handler
+  // Gallery Handler
   const handlePickFromGallery = async () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -123,7 +124,7 @@ export const AddItemScreen = () => {
 
     const selectedFriend = friends.find((f) => f.id === selectedFriendId) || friends[0];
     if (!selectedFriend) {
-      alert('Lütfen bir aga / kişi seçin.');
+      alert('Lütfen bir aga seçin.');
       return;
     }
 
@@ -131,7 +132,7 @@ export const AddItemScreen = () => {
     if (recordType === 'debt') {
       const parsed = parseFloat(amount.replace(',', '.'));
       if (!parsed || parsed <= 0) {
-        alert('Geçerli bir hesap tutarı giriniz.');
+        alert('Geçerli bir tutar giriniz.');
         return;
       }
       finalAmount = splitMode === 'split' ? Math.round(parsed / splitCount) : parsed;
@@ -145,11 +146,12 @@ export const AddItemScreen = () => {
     const newItemData = {
       title: title.trim(),
       type: recordType,
+      direction: direction, // 'lent' (Ben Verdim) vs 'borrowed' (Ben Aldım)
       friendId: selectedFriend.id,
       friendName: selectedFriend.name,
       notes: notes.trim(),
       dueDate: getCalculatedDueDate(),
-      imageUri: imageUri, // Attached proof photo or receipt
+      imageUri: imageUri,
       category: recordType === 'item' ? category : 'Ortak Hesap',
       urgency: recordType === 'item' ? urgency : 'Yüksek',
       amount: finalAmount,
@@ -163,7 +165,12 @@ export const AddItemScreen = () => {
   };
 
   const isItem = recordType === 'item';
-  const activeColor = isItem ? THEME.colors.blue : THEME.colors.purple;
+  const isLent = direction === 'lent';
+  const activeColor = isLent
+    ? isItem
+      ? THEME.colors.blue
+      : THEME.colors.purple
+    : '#EA580C'; // Orange for debt/borrowed
 
   return (
     <View style={styles.container}>
@@ -175,8 +182,13 @@ export const AddItemScreen = () => {
         >
           <MaterialCommunityIcons name="close" size={20} color={THEME.colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Yeni Kayıt Aç</Text>
-        <TouchableOpacity style={styles.saveHeaderBtn} onPress={handleSubmit}>
+        <Text style={styles.headerTitle}>
+          {isLent ? 'Yeni Alacak / Emanet Aç' : 'Borçlandım / Emanet Aldım'}
+        </Text>
+        <TouchableOpacity
+          style={[styles.saveHeaderBtn, { backgroundColor: activeColor }]}
+          onPress={handleSubmit}
+        >
           <Text style={styles.saveHeaderText}>Kaydet</Text>
         </TouchableOpacity>
       </View>
@@ -185,12 +197,64 @@ export const AddItemScreen = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Type Toggle: Emanet Eşya vs Borç / Fiş */}
+        {/* 1. DIRECTION SELECTOR (BEN VERDİM VS BEN ALDIM) */}
+        <View style={styles.directionSection}>
+          <Text style={styles.fieldLabel}>İŞLEM YÖNÜ: KİM KİME VERDİ?</Text>
+          <View style={styles.directionButtonsRow}>
+            <TouchableOpacity
+              style={[
+                styles.directionBtn,
+                isLent && styles.directionBtnLentActive,
+              ]}
+              activeOpacity={0.8}
+              onPress={() => setDirection('lent')}
+            >
+              <MaterialCommunityIcons
+                name="arrow-bottom-left"
+                size={18}
+                color={isLent ? '#FFFFFF' : THEME.colors.textSecondary}
+              />
+              <View style={styles.directionTextCol}>
+                <Text style={[styles.directionBtnTitle, isLent && styles.activeDirText]}>
+                  Ben Verdim
+                </Text>
+                <Text style={[styles.directionBtnSub, isLent && styles.activeDirSubText]}>
+                  Alacaklıyım / Dışarıda
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.directionBtn,
+                !isLent && styles.directionBtnBorrowedActive,
+              ]}
+              activeOpacity={0.8}
+              onPress={() => setDirection('borrowed')}
+            >
+              <MaterialCommunityIcons
+                name="arrow-top-right"
+                size={18}
+                color={!isLent ? '#FFFFFF' : THEME.colors.textSecondary}
+              />
+              <View style={styles.directionTextCol}>
+                <Text style={[styles.directionBtnTitle, !isLent && styles.activeDirText]}>
+                  Ben Aldım
+                </Text>
+                <Text style={[styles.directionBtnSub, !isLent && styles.activeDirSubText]}>
+                  Borçluyum / Emanet Bende
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* 2. RECORD TYPE TOGGLE (EMANET EŞYA VS BORÇ/ADİSYON) */}
         <View style={styles.typeSelectorWrapper}>
           <TouchableOpacity
             style={[
               styles.typeButton,
-              isItem && { backgroundColor: THEME.colors.blue, borderColor: THEME.colors.blue },
+              isItem && { backgroundColor: activeColor, borderColor: activeColor },
             ]}
             activeOpacity={0.8}
             onPress={() => setRecordType('item')}
@@ -208,7 +272,7 @@ export const AddItemScreen = () => {
           <TouchableOpacity
             style={[
               styles.typeButton,
-              !isItem && { backgroundColor: THEME.colors.purple, borderColor: THEME.colors.purple },
+              !isItem && { backgroundColor: activeColor, borderColor: activeColor },
             ]}
             activeOpacity={0.8}
             onPress={() => setRecordType('debt')}
@@ -224,15 +288,29 @@ export const AddItemScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* 1. Title Input */}
+        {/* 3. TITLE INPUT */}
         <View style={styles.fieldSection}>
           <Text style={styles.fieldLabel}>
-            {isItem ? 'NE VERDİN? (EŞYA TANIMI)' : 'NE HARCANDI? (HESAP / ADİSYON)'}
+            {isLent
+              ? isItem
+                ? 'NE VERDİN? (EŞYA TANIMI)'
+                : 'NE HARCANDI? (HESAP / ADİSYON)'
+              : isItem
+              ? 'NE ALDIN? (AGANIN HANGİ EŞYASI SENDE?)'
+              : 'HANGİ HESAPTAN DOLAYI BORÇLANDIN?'}
           </Text>
           <View style={styles.inputCard}>
             <TextInput
               style={styles.textInput}
-              placeholder={isItem ? 'Örn: Gri Zara Hırka, PlayStation Kolu, Matkap...' : 'Örn: Kadıköy Dürümcü, Starbucks, Halısaha...'}
+              placeholder={
+                isLent
+                  ? isItem
+                    ? 'Örn: Siyah Zara Hırka, PlayStation Kolu...'
+                    : 'Örn: Kadıköy Dürümcü, Konser Bileti...'
+                  : isItem
+                  ? 'Örn: Caner\'in Kamp Çadırı, Mert\'in Matkabı...'
+                  : 'Örn: Beşiktaş Gece Taksi, Ortak Halısaha Payım...'
+              }
               placeholderTextColor={THEME.colors.textLight}
               value={title}
               onChangeText={setTitle}
@@ -240,7 +318,7 @@ export const AddItemScreen = () => {
           </View>
         </View>
 
-        {/* 2. Photo / Receipt Proof Card (NEW & RICH) */}
+        {/* 4. PHOTO PROOF PICKER */}
         <View style={styles.fieldSection}>
           <View style={styles.photoHeaderRow}>
             <Text style={styles.fieldLabel}>
@@ -258,18 +336,12 @@ export const AddItemScreen = () => {
             <View style={styles.imagePreviewCard}>
               <Image source={{ uri: imageUri }} style={styles.imagePreview} />
               <View style={styles.imageActionsRow}>
-                <TouchableOpacity
-                  style={styles.retakeBtn}
-                  onPress={handleTakePhoto}
-                >
+                <TouchableOpacity style={styles.retakeBtn} onPress={handleTakePhoto}>
                   <MaterialCommunityIcons name="camera-retake" size={15} color={THEME.colors.primary} />
                   <Text style={styles.retakeBtnText}>Yeniden Çek</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.removeImageBtn}
-                  onPress={() => setImageUri(null)}
-                >
+                <TouchableOpacity style={styles.removeImageBtn} onPress={() => setImageUri(null)}>
                   <MaterialCommunityIcons name="trash-can-outline" size={15} color={THEME.colors.danger} />
                   <Text style={styles.removeImageText}>Kaldır</Text>
                 </TouchableOpacity>
@@ -280,29 +352,29 @@ export const AddItemScreen = () => {
               <View style={styles.photoPickerLeft}>
                 <MaterialCommunityIcons
                   name={isItem ? 'camera-outline' : 'receipt-outline'}
-                  size={28}
+                  size={26}
                   color={activeColor}
                 />
                 <View style={styles.photoPickerTextCol}>
                   <Text style={styles.photoPickerTitle}>
-                    {isItem ? 'Eşya Teslim Kanıtı Çek' : 'Adisyon / Fiş Fotoğrafı Ekle'}
+                    {isItem ? 'Eşya Durum Kanıtı Ekle' : 'Fiş / Adisyon Fotoğrafı Ekle'}
                   </Text>
                   <Text style={styles.photoPickerSub}>
-                    {isItem
-                      ? 'Çizik veya sağlamlık durumunu kaydet, sonradan tartışma çıkmasın.'
-                      : 'Fişi yükle, agam neye ne kadar ödediğini bilsin.'}
+                    {isLent
+                      ? 'Teslim ettiğin anki sağlamlık durumunu kaydet.'
+                      : 'Aldığın anki hasar/temizlik durumunu kaydet, sonra üstüne kalmasın.'}
                   </Text>
                 </View>
               </View>
 
               <View style={styles.photoButtonsRow}>
-                <TouchableOpacity style={styles.photoActionBtn} onPress={handleTakePhoto}>
-                  <MaterialCommunityIcons name="camera" size={16} color="#FFFFFF" />
+                <TouchableOpacity style={[styles.photoActionBtn, { backgroundColor: activeColor }]} onPress={handleTakePhoto}>
+                  <MaterialCommunityIcons name="camera" size={15} color="#FFFFFF" />
                   <Text style={styles.photoActionText}>Kamera</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.photoActionBtnOutline} onPress={handlePickFromGallery}>
-                  <MaterialCommunityIcons name="image" size={16} color={THEME.colors.primary} />
+                  <MaterialCommunityIcons name="image" size={15} color={THEME.colors.primary} />
                   <Text style={styles.photoActionTextOutline}>Galeri</Text>
                 </TouchableOpacity>
               </View>
@@ -310,12 +382,14 @@ export const AddItemScreen = () => {
           )}
         </View>
 
-        {/* 3. Debt Specific: Amount & Split Calculator */}
+        {/* 5. AMOUNT & SPLIT (IF DEBT) */}
         {!isItem && (
           <View style={styles.fieldSection}>
-            <Text style={styles.fieldLabel}>HESAP VE BÖLÜŞÜM</Text>
-            <View style={styles.amountInputCard}>
-              <Text style={styles.currencySymbol}>₺</Text>
+            <Text style={styles.fieldLabel}>
+              {isLent ? 'ALACAĞIN TUTAR' : 'ÖDEYECEĞİN BORÇ TUTARI'}
+            </Text>
+            <View style={[styles.amountInputCard, { borderColor: activeColor }]}>
+              <Text style={[styles.currencySymbol, { color: activeColor }]}>₺</Text>
               <TextInput
                 style={styles.amountInput}
                 placeholder="0.00"
@@ -326,87 +400,89 @@ export const AddItemScreen = () => {
               />
             </View>
 
-            {/* Split Mode Selector */}
-            <View style={styles.splitToggleRow}>
-              <TouchableOpacity
-                style={[
-                  styles.splitToggleBtn,
-                  splitMode === 'direct' && styles.activeSplitToggle,
-                ]}
-                onPress={() => setSplitMode('direct')}
-              >
-                <Text
-                  style={[
-                    styles.splitToggleText,
-                    splitMode === 'direct' && styles.activeSplitToggleText,
-                  ]}
-                >
-                  Tek Kişiye Borç
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.splitToggleBtn,
-                  splitMode === 'split' && styles.activeSplitToggle,
-                ]}
-                onPress={() => setSplitMode('split')}
-              >
-                <Text
-                  style={[
-                    styles.splitToggleText,
-                    splitMode === 'split' && styles.activeSplitToggleText,
-                  ]}
-                >
-                  Alman Usulü Bölüş
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Split Calculator */}
-            {splitMode === 'split' && (
-              <View style={styles.splitBox}>
-                <View style={styles.splitHeader}>
-                  <Text style={styles.splitTitle}>Masa Kaç Kişi?</Text>
-                  <View style={styles.splitCounter}>
-                    <TouchableOpacity
-                      style={styles.counterBtn}
-                      onPress={() => setSplitCount(Math.max(2, splitCount - 1))}
+            {isLent && (
+              <>
+                <View style={styles.splitToggleRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.splitToggleBtn,
+                      splitMode === 'direct' && styles.activeSplitToggle,
+                    ]}
+                    onPress={() => setSplitMode('direct')}
+                  >
+                    <Text
+                      style={[
+                        styles.splitToggleText,
+                        splitMode === 'direct' && styles.activeSplitToggleText,
+                      ]}
                     >
-                      <Text style={styles.counterBtnText}>-</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.counterValue}>{splitCount} Kişi</Text>
-                    <TouchableOpacity
-                      style={styles.counterBtn}
-                      onPress={() => setSplitCount(splitCount + 1)}
+                      Tek Kişiye Borç
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.splitToggleBtn,
+                      splitMode === 'split' && styles.activeSplitToggle,
+                    ]}
+                    onPress={() => setSplitMode('split')}
+                  >
+                    <Text
+                      style={[
+                        styles.splitToggleText,
+                        splitMode === 'split' && styles.activeSplitToggleText,
+                      ]}
                     >
-                      <Text style={styles.counterBtnText}>+</Text>
-                    </TouchableOpacity>
-                  </View>
+                      Alman Usulü Bölüş
+                    </Text>
+                  </TouchableOpacity>
                 </View>
 
-                {amount && parseFloat(amount) > 0 ? (
-                  <View style={styles.splitResultRow}>
-                    <Text style={styles.splitResultLabel}>Kişi Başına Düşen:</Text>
-                    <Text style={styles.splitResultValue}>
-                      {formatCurrency(Math.round(parseFloat(amount) / splitCount))}
-                    </Text>
+                {splitMode === 'split' && (
+                  <View style={styles.splitBox}>
+                    <View style={styles.splitHeader}>
+                      <Text style={styles.splitTitle}>Masa Kaç Kişi?</Text>
+                      <View style={styles.splitCounter}>
+                        <TouchableOpacity
+                          style={styles.counterBtn}
+                          onPress={() => setSplitCount(Math.max(2, splitCount - 1))}
+                        >
+                          <Text style={styles.counterBtnText}>-</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.counterValue}>{splitCount} Kişi</Text>
+                        <TouchableOpacity
+                          style={styles.counterBtn}
+                          onPress={() => setSplitCount(splitCount + 1)}
+                        >
+                          <Text style={styles.counterBtnText}>+</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {amount && parseFloat(amount) > 0 ? (
+                      <View style={styles.splitResultRow}>
+                        <Text style={styles.splitResultLabel}>Kişi Başına Düşen:</Text>
+                        <Text style={[styles.splitResultValue, { color: activeColor }]}>
+                          {formatCurrency(Math.round(parseFloat(amount) / splitCount))}
+                        </Text>
+                      </View>
+                    ) : null}
                   </View>
-                ) : null}
-              </View>
+                )}
+              </>
             )}
           </View>
         )}
 
-        {/* 4. Select Friend */}
+        {/* 6. SELECT FRIEND */}
         <View style={styles.fieldSection}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.fieldLabel}>KİME VERDİN? (MUHATAP AGA)</Text>
-            <TouchableOpacity
-              onPress={() => setShowAddFriendInput(!showAddFriendInput)}
-            >
-              <Text style={styles.addFriendLink}>
-                {showAddFriendInput ? 'Vazgeç' : '+ Yeni Kişi'}
+            <Text style={styles.fieldLabel}>
+              {isLent ? 'KİME VERDİN? (MUHATAP AGA)' : 'KİMDEN ALDIN? (KİME BORÇLUSUN?)'}
+            </Text>
+            <TouchableOpacity onPress={() => setShowAddFriendInput(!showAddFriendInput)}>
+              <Text style={[styles.addFriendLink, { color: activeColor }]}>
+                {showAddFriendInput ? 'Vazgeç' : '+ Yeni Aga'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -421,7 +497,7 @@ export const AddItemScreen = () => {
                 onChangeText={setNewFriendName}
               />
               <TouchableOpacity
-                style={styles.addFriendSubmitBtn}
+                style={[styles.addFriendSubmitBtn, { backgroundColor: activeColor }]}
                 onPress={handleAddNewFriend}
               >
                 <Text style={styles.addFriendSubmitText}>Ekle</Text>
@@ -439,10 +515,10 @@ export const AddItemScreen = () => {
                     styles.friendCard,
                     isSelected && {
                       borderColor: activeColor,
-                      backgroundColor: isItem ? THEME.colors.blueBg : THEME.colors.purpleBg,
+                      backgroundColor: isLent ? THEME.colors.blueBg : '#FFF7ED',
                     },
                   ]}
-                  activeOpacity={0.7}
+                  activeOpacity={0.75}
                   onPress={() => setSelectedFriendId(f.id)}
                 >
                   <View
@@ -470,7 +546,7 @@ export const AddItemScreen = () => {
           </ScrollView>
         </View>
 
-        {/* 5. Item Specific: Category & Urgency */}
+        {/* 7. ITEM CATEGORY & URGENCY */}
         {isItem && (
           <>
             <View style={styles.fieldSection}>
@@ -483,16 +559,16 @@ export const AddItemScreen = () => {
                       key={cat.label}
                       style={[
                         styles.catButton,
-                        isSelected && { borderColor: THEME.colors.blue, backgroundColor: THEME.colors.blueBg },
+                        isSelected && { borderColor: activeColor, backgroundColor: isLent ? THEME.colors.blueBg : '#FFF7ED' },
                       ]}
                       onPress={() => setCategory(cat.label)}
                     >
                       <MaterialCommunityIcons
                         name={cat.icon}
                         size={17}
-                        color={isSelected ? THEME.colors.blue : THEME.colors.textMuted}
+                        color={isSelected ? activeColor : THEME.colors.textMuted}
                       />
-                      <Text style={[styles.catLabel, isSelected && { color: THEME.colors.blue, fontWeight: '700' }]}>
+                      <Text style={[styles.catLabel, isSelected && { color: activeColor, fontWeight: '700' }]}>
                         {cat.label}
                       </Text>
                     </TouchableOpacity>
@@ -534,9 +610,11 @@ export const AddItemScreen = () => {
           </>
         )}
 
-        {/* 6. Duration Options */}
+        {/* 8. DURATION */}
         <View style={styles.fieldSection}>
-          <Text style={styles.fieldLabel}>İADE / ÖDEME SÜRESİ</Text>
+          <Text style={styles.fieldLabel}>
+            {isLent ? 'İADE / ÖDEME SÜRESİ' : 'NE ZAMANA KADAR ÖDEYECEKSİN / İADE EDECEKSİN?'}
+          </Text>
           <View style={styles.durationRow}>
             {durationOptions.map((opt) => {
               const isSelected = opt.days === daysOption;
@@ -566,13 +644,13 @@ export const AddItemScreen = () => {
           </View>
         </View>
 
-        {/* 7. Extra Notes */}
+        {/* 9. NOTES */}
         <View style={styles.fieldSection}>
-          <Text style={styles.fieldLabel}>NOTLAR (ÖRN: "CUMA GÜNÜ MAÇA GİDERKEN ALDI")</Text>
+          <Text style={styles.fieldLabel}>NOTLAR / HATIRLATMA</Text>
           <View style={styles.notesCard}>
             <TextInput
               style={styles.notesInput}
-              placeholder="Aramızdaki özel durum veya not..."
+              placeholder={isLent ? "Örn: Cuma maça giderken aldı..." : "Örn: Maaş yatınca IBAN'ına göndereceğim..."}
               placeholderTextColor={THEME.colors.textLight}
               value={notes}
               onChangeText={setNotes}
@@ -582,19 +660,25 @@ export const AddItemScreen = () => {
           </View>
         </View>
 
-        {/* Final Submit Button */}
+        {/* SUBMIT BUTTON */}
         <TouchableOpacity
           style={[styles.bigSubmitBtn, { backgroundColor: activeColor }]}
           activeOpacity={0.85}
           onPress={handleSubmit}
         >
           <MaterialCommunityIcons
-            name={isItem ? 'package-variant' : 'receipt'}
+            name={isLent ? (isItem ? 'package-variant' : 'cash') : (isItem ? 'package-down' : 'hand-coin')}
             size={18}
             color="#FFFFFF"
           />
           <Text style={styles.bigSubmitBtnText}>
-            {isItem ? 'Emanet Kaydını Aç' : 'Borç / Fiş Kaydını Aç'}
+            {isLent
+              ? isItem
+                ? 'Emanet Kaydını Aç (Alacak)'
+                : 'Borç / Adisyon Kaydını Aç'
+              : isItem
+              ? 'Aldığım Emanet Olarak Kaydet'
+              : 'Borcum Var Olarak Kaydet'}
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -625,14 +709,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
     color: THEME.colors.textPrimary,
   },
   saveHeaderBtn: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: THEME.colors.primary,
     borderRadius: THEME.borderRadius.sm,
   },
   saveHeaderText: {
@@ -644,12 +727,58 @@ const styles = StyleSheet.create({
     padding: THEME.spacing.md,
     paddingBottom: 60,
   },
+  // Direction Selector
+  directionSection: {
+    marginBottom: 14,
+  },
+  directionButtonsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  directionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: THEME.colors.surface,
+    padding: 10,
+    borderRadius: THEME.borderRadius.md,
+    borderWidth: 1.5,
+    borderColor: THEME.colors.border,
+    gap: 8,
+  },
+  directionBtnLentActive: {
+    backgroundColor: THEME.colors.blue,
+    borderColor: THEME.colors.blue,
+  },
+  directionBtnBorrowedActive: {
+    backgroundColor: '#EA580C',
+    borderColor: '#EA580C',
+  },
+  directionTextCol: {
+    flex: 1,
+  },
+  directionBtnTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: THEME.colors.textPrimary,
+  },
+  directionBtnSub: {
+    fontSize: 10,
+    color: THEME.colors.textMuted,
+    marginTop: 1,
+  },
+  activeDirText: {
+    color: '#FFFFFF',
+  },
+  activeDirSubText: {
+    color: 'rgba(255, 255, 255, 0.85)',
+  },
   typeSelectorWrapper: {
     flexDirection: 'row',
     backgroundColor: THEME.colors.surface,
     borderRadius: THEME.borderRadius.md,
     padding: 4,
-    marginBottom: 16,
+    marginBottom: 14,
     borderWidth: 1,
     borderColor: THEME.colors.border,
     gap: 6,
@@ -659,14 +788,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
+    paddingVertical: 9,
     borderRadius: THEME.borderRadius.sm,
     gap: 6,
     borderWidth: 1,
     borderColor: 'transparent',
   },
   typeButtonText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: THEME.colors.textMuted,
   },
@@ -674,7 +803,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   fieldSection: {
-    marginBottom: 16,
+    marginBottom: 14,
   },
   fieldLabel: {
     fontSize: 10,
@@ -698,7 +827,6 @@ const styles = StyleSheet.create({
     padding: 0,
     outlineStyle: 'none',
   },
-  // Photo proof section styles
   photoHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -755,7 +883,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: THEME.colors.primary,
     paddingVertical: 8,
     borderRadius: THEME.borderRadius.sm,
   },
@@ -823,21 +950,18 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: THEME.colors.danger,
   },
-  // Amount & Split styles
   amountInputCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: THEME.colors.surface,
     borderRadius: THEME.borderRadius.md,
     borderWidth: 1.5,
-    borderColor: THEME.colors.purpleBorder,
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
   currencySymbol: {
     fontSize: 22,
     fontWeight: '800',
-    color: THEME.colors.purple,
     marginRight: 6,
   },
   amountInput: {
@@ -935,9 +1059,7 @@ const styles = StyleSheet.create({
   splitResultValue: {
     fontSize: 15,
     fontWeight: '800',
-    color: THEME.colors.purple,
   },
-  // Friends
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -947,7 +1069,6 @@ const styles = StyleSheet.create({
   addFriendLink: {
     fontSize: 11,
     fontWeight: '700',
-    color: THEME.colors.blue,
   },
   newFriendRow: {
     flexDirection: 'row',
@@ -965,7 +1086,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   addFriendSubmitBtn: {
-    backgroundColor: THEME.colors.primary,
     paddingHorizontal: 12,
     borderRadius: THEME.borderRadius.sm,
     alignItems: 'center',
@@ -1013,7 +1133,6 @@ const styles = StyleSheet.create({
     color: THEME.colors.textMuted,
     fontWeight: '600',
   },
-  // Categories & Urgency
   categoriesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

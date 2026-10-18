@@ -17,6 +17,30 @@ import { useApp } from '../context/AppContext';
 import { calculateDaysStatus, formatCurrency, formatDate } from '../utils/helpers';
 import { DARLAMA_TEMPLATES } from '../constants/templates';
 
+const BORROWER_TEMPLATES = [
+  {
+    id: 'b_1',
+    level: 'Ödeme & Teslimat Hazır',
+    tone: 'Centilmen Aga',
+    text: (friendName, title) =>
+      `Kanka selam! Sendeki ${title} kaydını hazırladım. Ne zaman buluşuyoruz, helalleşelim?`,
+  },
+  {
+    id: 'b_2',
+    level: 'IBAN İste (FAST)',
+    tone: 'Hızlı Kapatma',
+    text: (friendName, title, amount) =>
+      `Aga selam! ${title} için borç bakiyesini FAST ile kapatayım hemen, güncel IBAN gönderir misin?`,
+  },
+  {
+    id: 'b_3',
+    level: 'Kısa Süre Ricası',
+    tone: 'Darda Kalan Aga',
+    text: (friendName, title) =>
+      `Kanka ${title} için harçlık/maaş 2 gün rötarlı yatıyor, gecikme için kusura bakma. Yatar yatmaz ilk işim helalleşmek.`,
+  },
+];
+
 export const DetailScreen = () => {
   const {
     selectedItem,
@@ -45,29 +69,49 @@ export const DetailScreen = () => {
   }
 
   const isDebt = selectedItem.type === 'debt';
+  const isBorrowed = selectedItem.direction === 'borrowed';
   const daysInfo = calculateDaysStatus(selectedItem.dueDate);
   const isOverdue = daysInfo.status === 'overdue' && !selectedItem.isResolved;
   const friendObj = friends.find((f) => f.id === selectedItem.friendId);
-  const templates = isDebt ? DARLAMA_TEMPLATES.debt : DARLAMA_TEMPLATES.item;
 
-  // Semantic color for this detail view
+  const templates = isBorrowed
+    ? BORROWER_TEMPLATES
+    : isDebt
+    ? DARLAMA_TEMPLATES.debt
+    : DARLAMA_TEMPLATES.item;
+
   const themeColor = selectedItem.isResolved
     ? THEME.colors.success
     : isOverdue
     ? THEME.colors.danger
+    : isBorrowed
+    ? '#EA580C'
     : isDebt
     ? THEME.colors.purple
     : THEME.colors.blue;
 
-  // Prepare structured share message
+  // Resolve template text dynamically if it's a function
+  const getRenderedTemplateText = (tpl) => {
+    if (typeof tpl.text === 'function') {
+      return tpl.text(
+        selectedItem.friendName,
+        isDebt ? formatCurrency(selectedItem.amount) : selectedItem.title,
+        selectedItem.title
+      );
+    }
+    return tpl.text;
+  };
+
   const buildProofShareMessage = (customMsg = '') => {
     const proofNote = selectedItem.imageUri ? '\n📸 Kanıt: Fotoğraf/Adisyon fişi sisteme işlenmiştir.' : '';
     const amountNote = isDebt ? `\n💰 Tutar: ${formatCurrency(selectedItem.amount)}` : '';
+    const roleNote = isBorrowed ? `\n⚠️ *Durum:* Sana olan borcum / Sendeki emanetim` : '';
+
     return (
-      `⚖️ *HELALLESH RESMİ BİLDİRİMİ*\n` +
+      `⚖️ *HELALLESH BİLDİRİMİ*\n` +
       `--------------------------------\n` +
       `👤 *Muhatap:* ${selectedItem.friendName}\n` +
-      `📦 *Konu:* ${selectedItem.title}${amountNote}\n` +
+      `📦 *Konu:* ${selectedItem.title}${amountNote}${roleNote}\n` +
       `📅 *Kayıt Tarihi:* ${formatDate(selectedItem.givenDate)}\n` +
       `⏳ *Vade Durumu:* ${daysInfo.text}${proofNote}\n\n` +
       (customMsg ? `💬 "${customMsg}"\n\n` : '') +
@@ -75,8 +119,8 @@ export const DetailScreen = () => {
     );
   };
 
-  const handleCopyText = (templateText, id) => {
-    const fullMsg = buildProofShareMessage(templateText);
+  const handleCopyText = (textToCopy, id) => {
+    const fullMsg = buildProofShareMessage(textToCopy);
     if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(fullMsg);
     }
@@ -84,8 +128,8 @@ export const DetailScreen = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleSendWhatsApp = async (templateText) => {
-    const fullMsg = buildProofShareMessage(templateText);
+  const handleSendWhatsApp = async (textToSend) => {
+    const fullMsg = buildProofShareMessage(textToSend);
     const encoded = encodeURIComponent(fullMsg);
     const whatsappUrl = `whatsapp://send?text=${encoded}`;
     const webUrl = `https://wa.me/?text=${encoded}`;
@@ -102,16 +146,18 @@ export const DetailScreen = () => {
         }
       }
     } catch (e) {
-      // Fallback to iOS/Android native share sheet
       Share.share({ message: fullMsg });
     }
   };
 
   const handleNativeShare = async () => {
-    const fullMsg = buildProofShareMessage("Aga aramızdaki emanet/hesap kaydını Helallesh'e girdim, bilgin olsun.");
+    const defaultText = isBorrowed
+      ? "Kanka sendeki emanet/borç kaydını Helallesh'ten takip ediyorum, vaktinde kapatacağım."
+      : "Aga aramızdaki emanet/hesap kaydını Helallesh'e girdim, bilgin olsun.";
+    const fullMsg = buildProofShareMessage(defaultText);
     try {
       await Share.share({
-        title: 'Helallesh Resmi Bildirimi',
+        title: 'Helallesh Bildirimi',
         message: fullMsg,
       });
     } catch (e) {
@@ -137,7 +183,13 @@ export const DetailScreen = () => {
         </TouchableOpacity>
 
         <Text style={styles.navTitle}>
-          {isDebt ? 'Borç / Fiş Detayı' : 'Emanet Detayı'}
+          {isBorrowed
+            ? isDebt
+              ? 'Ödeyeceğim Borç'
+              : 'Üzerimdeki Emanet'
+            : isDebt
+            ? 'Alacağım Borç'
+            : 'Verdiğim Emanet'}
         </Text>
 
         <View style={styles.navRightActions}>
@@ -155,6 +207,19 @@ export const DetailScreen = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
+        {/* Direction Notice Banner if Borrowed */}
+        {isBorrowed && !selectedItem.isResolved && (
+          <View style={styles.borrowedBanner}>
+            <MaterialCommunityIcons name="alert-decagram" size={20} color="#EA580C" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.borrowedBannerTitle}>Bu Kayıt Senin Üzerinde!</Text>
+              <Text style={styles.borrowedBannerSub}>
+                Agana mahcup olmamak ve çökücü damgası yememek için vaktinde öde/iade et.
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Main Status & Info Card */}
         <View style={[styles.card, { borderTopColor: themeColor, borderTopWidth: 4 }]}>
           <View style={styles.cardHeader}>
@@ -167,6 +232,8 @@ export const DetailScreen = () => {
                       ? THEME.colors.successBg
                       : isOverdue
                       ? THEME.colors.dangerBg
+                      : isBorrowed
+                      ? '#FFF7ED'
                       : isDebt
                       ? THEME.colors.purpleBg
                       : THEME.colors.blueBg,
@@ -175,7 +242,13 @@ export const DetailScreen = () => {
                 ]}
               >
                 <Text style={[styles.statusBadgeText, { color: themeColor }]}>
-                  {selectedItem.isResolved ? '✓ Helalleşildi' : daysInfo.text}
+                  {selectedItem.isResolved
+                    ? '✓ Helalleşildi'
+                    : isBorrowed
+                    ? isOverdue
+                      ? '🚨 Gecikmedesin!'
+                      : 'Borcun Var'
+                    : daysInfo.text}
                 </Text>
               </View>
 
@@ -186,9 +259,11 @@ export const DetailScreen = () => {
 
             {isDebt ? (
               <View style={styles.amountDisplay}>
-                <Text style={styles.amountLabel}>Tutar</Text>
+                <Text style={styles.amountLabel}>
+                  {isBorrowed ? 'Ödeyeceğin Borç' : 'Alacağın Tutar'}
+                </Text>
                 <Text style={[styles.amountValue, { color: themeColor }]}>
-                  {formatCurrency(selectedItem.amount)}
+                  {isBorrowed ? `-${formatCurrency(selectedItem.amount)}` : `+${formatCurrency(selectedItem.amount)}`}
                 </Text>
                 {selectedItem.isSplit && (
                   <Text style={styles.splitSub}>
@@ -218,11 +293,20 @@ export const DetailScreen = () => {
           {/* Key-Value Details */}
           <View style={styles.detailsGrid}>
             <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Muhatap Aga</Text>
+              <Text style={styles.detailLabel}>
+                {isBorrowed ? 'Alacaklı Aga' : 'Borçlu / Muhatap Aga'}
+              </Text>
               <Text style={styles.detailValue}>{selectedItem.friendName}</Text>
               {friendObj && (
                 <Text style={styles.detailKarma}>Karma Skoru: {friendObj.score}/100</Text>
               )}
+            </View>
+
+            <View style={styles.detailItem}>
+              <Text style={styles.detailLabel}>İşlem Yönü</Text>
+              <Text style={[styles.detailValue, { color: isBorrowed ? '#EA580C' : THEME.colors.blue }]}>
+                {isBorrowed ? 'Ben Aldım (Borçluyum)' : 'Ben Verdim (Alacaklıyım)'}
+              </Text>
             </View>
 
             <View style={styles.detailItem}>
@@ -234,33 +318,21 @@ export const DetailScreen = () => {
               <Text style={styles.detailLabel}>Vade Tarihi</Text>
               <Text style={styles.detailValue}>{formatDate(selectedItem.dueDate)}</Text>
             </View>
-
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Darlık Düzeyi</Text>
-              <Text
-                style={[
-                  styles.detailValue,
-                  { color: isOverdue ? THEME.colors.danger : THEME.colors.textPrimary },
-                ]}
-              >
-                {isOverdue ? '🚨 Kritik (Gecikmede)' : 'Normal'}
-              </Text>
-            </View>
           </View>
         </View>
 
-        {/* 📸 PROOF PHOTO / RECEIPT CARD (RICH VISUAL EVIDENCE) */}
+        {/* 📸 PROOF PHOTO / RECEIPT CARD */}
         {selectedItem.imageUri ? (
           <View style={styles.proofPhotoCard}>
             <View style={styles.proofPhotoHeader}>
               <View style={styles.proofHeaderLeft}>
                 <MaterialCommunityIcons
-                  name={isDebt ? 'receipt' : 'camera-check'}
+                  name={isDebt ? 'receipt' : 'camera'}
                   size={18}
-                  color={THEME.colors.purple}
+                  color={themeColor}
                 />
                 <Text style={styles.proofHeaderTitle}>
-                  {isDebt ? 'Resmi Adisyon / Hesap Fişi' : 'Eşya Teslim Kanıt Fotoğrafı'}
+                  {isDebt ? 'Kayıtlı Fiş / Adisyon Görseli' : 'Eşya Kanıt Fotoğrafı'}
                 </Text>
               </View>
               <TouchableOpacity
@@ -282,16 +354,11 @@ export const DetailScreen = () => {
             <View style={styles.proofFooter}>
               <MaterialCommunityIcons name="shield-check" size={13} color={THEME.colors.success} />
               <Text style={styles.proofFooterText}>
-                Bu görsel sisteme delil olarak işlenmiştir.
+                Bu görsel Helallesh sistemine delil olarak işlenmiştir.
               </Text>
             </View>
           </View>
-        ) : (
-          <View style={styles.noProofBox}>
-            <MaterialCommunityIcons name="image-off-outline" size={20} color={THEME.colors.textLight} />
-            <Text style={styles.noProofText}>Bu kayda henüz kanıt fotoğrafı eklenmemiş.</Text>
-          </View>
-        )}
+        ) : null}
 
         {/* Agaya Bildir & Paylaş Action Banner */}
         <TouchableOpacity
@@ -301,9 +368,11 @@ export const DetailScreen = () => {
         >
           <MaterialCommunityIcons name="share-variant" size={18} color="#FFFFFF" />
           <View style={styles.shareBannerTextCol}>
-            <Text style={styles.shareBannerTitle}>Agaya Kanıtlı Rapor Gönder</Text>
+            <Text style={styles.shareBannerTitle}>
+              {isBorrowed ? "Agaya 'Ödüyorum/Hazırladım' Diye İlet" : 'Agaya Kanıtlı Rapor Gönder'}
+            </Text>
             <Text style={styles.shareBannerSub}>
-              WhatsApp, SMS veya AirDrop ile tam dökümü ilet
+              WhatsApp veya SMS ile hazır durumu paylaş
             </Text>
           </View>
           <MaterialCommunityIcons name="chevron-right" size={20} color="#FFFFFF" />
@@ -312,12 +381,14 @@ export const DetailScreen = () => {
         {/* Resolve or Reopen Action Button */}
         {!selectedItem.isResolved ? (
           <TouchableOpacity
-            style={styles.resolveBtn}
+            style={[styles.resolveBtn, { backgroundColor: THEME.colors.success }]}
             activeOpacity={0.85}
             onPress={() => resolveItem(selectedItem.id)}
           >
             <MaterialCommunityIcons name="check-decagram" size={20} color="#FFFFFF" />
-            <Text style={styles.resolveBtnText}>Helalleştik (Kaydı Kapat)</Text>
+            <Text style={styles.resolveBtnText}>
+              {isBorrowed ? 'Borcumu Ödedim (Kaydı Kapat)' : 'Helalleştik (Kaydı Kapat)'}
+            </Text>
           </TouchableOpacity>
         ) : (
           <View style={styles.resolvedInfoBox}>
@@ -328,8 +399,8 @@ export const DetailScreen = () => {
           </View>
         )}
 
-        {/* Resmi İcra Tebligatı / Mahkeme Kağıdı Generator */}
-        {!selectedItem.isResolved && (
+        {/* Resmi İcra Tebligatı / Mahkeme Kağıdı (SADECE ALACAKLIYSAM) */}
+        {!isBorrowed && !selectedItem.isResolved && (
           <View style={styles.tebligatCard}>
             <View style={styles.tebligatHeader}>
               <View style={styles.tebligatIconBox}>
@@ -352,55 +423,60 @@ export const DetailScreen = () => {
           </View>
         )}
 
-        {/* Kademeli Darlama Şablonları */}
+        {/* WhatsApp Hızlı Mesaj Şablonları */}
         {!selectedItem.isResolved && (
           <View style={styles.darlamaSection}>
-            <Text style={styles.sectionTitle}>MERT GÜNAYDIN USULÜ DARLAMA MESAJLARI</Text>
+            <Text style={styles.sectionTitle}>
+              {isBorrowed ? 'AGAYA ÖDEME / İADE MESAJLARI' : 'MERT GÜNAYDIN USULÜ DARLAMA MESAJLARI'}
+            </Text>
             <Text style={styles.sectionSubtitle}>
               Tek tıkla kopyala veya doğrudan aganın WhatsApp'ına fırlat:
             </Text>
 
-            {templates.map((tpl) => (
-              <View key={tpl.id} style={styles.templateCard}>
-                <View style={styles.templateHeader}>
-                  <View style={styles.templateTag}>
-                    <Text style={styles.templateTagText}>{tpl.label}</Text>
+            {templates.map((tpl) => {
+              const renderedMsg = getRenderedTemplateText(tpl);
+              return (
+                <View key={tpl.id} style={styles.templateCard}>
+                  <View style={styles.templateHeader}>
+                    <View style={styles.templateTag}>
+                      <Text style={styles.templateTagText}>{tpl.level || tpl.label}</Text>
+                    </View>
+                    <Text style={styles.templateTone}>{tpl.tone || ''}</Text>
                   </View>
-                  <Text style={styles.templateTone}>{tpl.tone}</Text>
-                </View>
 
-                <Text style={styles.templateMessage}>"{tpl.text}"</Text>
+                  <Text style={styles.templateMessage}>"{renderedMsg}"</Text>
 
-                <View style={styles.templateActions}>
-                  <TouchableOpacity
-                    style={styles.actionBtnOutline}
-                    onPress={() => handleCopyText(tpl.text, tpl.id)}
-                  >
-                    <MaterialCommunityIcons
-                      name={copiedId === tpl.id ? 'check' : 'content-copy'}
-                      size={14}
-                      color={copiedId === tpl.id ? THEME.colors.success : THEME.colors.textSecondary}
-                    />
-                    <Text
-                      style={[
-                        styles.actionBtnText,
-                        copiedId === tpl.id && { color: THEME.colors.success },
-                      ]}
+                  <View style={styles.templateActions}>
+                    <TouchableOpacity
+                      style={styles.actionBtnOutline}
+                      onPress={() => handleCopyText(renderedMsg, tpl.id)}
                     >
-                      {copiedId === tpl.id ? 'Kopyalandı' : 'Kopyala'}
-                    </Text>
-                  </TouchableOpacity>
+                      <MaterialCommunityIcons
+                        name={copiedId === tpl.id ? 'check' : 'content-copy'}
+                        size={14}
+                        color={copiedId === tpl.id ? THEME.colors.success : THEME.colors.textSecondary}
+                      />
+                      <Text
+                        style={[
+                          styles.actionBtnText,
+                          copiedId === tpl.id && { color: THEME.colors.success },
+                        ]}
+                      >
+                        {copiedId === tpl.id ? 'Kopyalandı' : 'Kopyala'}
+                      </Text>
+                    </TouchableOpacity>
 
-                  <TouchableOpacity
-                    style={styles.actionBtnWhatsApp}
-                    onPress={() => handleSendWhatsApp(tpl.text)}
-                  >
-                    <MaterialCommunityIcons name="whatsapp" size={15} color="#FFFFFF" />
-                    <Text style={styles.actionBtnWhatsAppText}>WhatsApp'a Gönder</Text>
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.actionBtnWhatsApp}
+                      onPress={() => handleSendWhatsApp(renderedMsg)}
+                    >
+                      <MaterialCommunityIcons name="whatsapp" size={15} color="#FFFFFF" />
+                      <Text style={styles.actionBtnWhatsAppText}>WhatsApp'a Gönder</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         )}
       </ScrollView>
@@ -510,6 +586,27 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: THEME.spacing.md,
     paddingBottom: 60,
+  },
+  borrowedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderColor: '#FFEDD5',
+    borderRadius: THEME.borderRadius.md,
+    padding: 12,
+    marginBottom: 12,
+  },
+  borrowedBannerTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#EA580C',
+  },
+  borrowedBannerSub: {
+    fontSize: 11,
+    color: '#9A3412',
+    marginTop: 1,
   },
   card: {
     backgroundColor: THEME.colors.surface,
@@ -635,7 +732,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 1,
   },
-  // Photo proof card
   proofPhotoCard: {
     backgroundColor: THEME.colors.surface,
     borderRadius: THEME.borderRadius.md,
@@ -696,22 +792,6 @@ const styles = StyleSheet.create({
     color: THEME.colors.textMuted,
     fontWeight: '500',
   },
-  noProofBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: THEME.colors.surface,
-    borderRadius: THEME.borderRadius.md,
-    padding: 12,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: THEME.colors.border,
-  },
-  noProofText: {
-    fontSize: 12,
-    color: THEME.colors.textMuted,
-  },
-  // Share Banner
   shareBannerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -743,7 +823,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: THEME.colors.success,
     paddingVertical: 14,
     borderRadius: THEME.borderRadius.md,
     marginBottom: 14,
@@ -900,7 +979,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
-  // Modal styles
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.92)',
