@@ -10,7 +10,7 @@ export const BottomNavigation = () => {
   const tabs = [
     { key: 'dashboard', label: 'Pano', icon: 'view-dashboard-outline', activeIcon: 'view-dashboard' },
     { key: 'add', label: 'Ekle', isAction: true, icon: 'plus' },
-    { key: 'friends', label: 'Kişiler', icon: 'account-group-outline', activeIcon: 'account-group' },
+    { key: 'friends', label: 'Agalar', icon: 'account-group-outline', activeIcon: 'account-group' },
     { key: 'stats', label: 'Özet', icon: 'chart-pie-outline', activeIcon: 'chart-pie' },
   ];
 
@@ -44,7 +44,7 @@ export const BottomNavigation = () => {
             <MaterialCommunityIcons
               name={isActive ? tab.activeIcon : tab.icon}
               size={22}
-              color={isActive ? THEME.colors.primary : THEME.colors.textMuted}
+              color={isActive ? THEME.colors.blue : THEME.colors.textMuted}
             />
             <Text style={[styles.tabLabel, isActive && styles.activeTabLabel]}>
               {tab.label}
@@ -67,6 +67,11 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: Platform.OS === 'ios' ? 24 : 10,
     paddingHorizontal: THEME.spacing.sm,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 4,
   },
   tabItem: {
     alignItems: 'center',
@@ -76,13 +81,13 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 11,
-    fontWeight: '500',
+    fontWeight: '600',
     color: THEME.colors.textMuted,
     marginTop: 4,
   },
   activeTabLabel: {
-    color: THEME.colors.primary,
-    fontWeight: '700',
+    color: THEME.colors.blue,
+    fontWeight: '800',
   },
   actionTab: {
     alignItems: 'center',
@@ -91,17 +96,22 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   actionIconBox: {
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     borderRadius: THEME.borderRadius.md,
-    backgroundColor: THEME.colors.primary,
+    backgroundColor: THEME.colors.blue,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: THEME.colors.blue,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
   },
   actionLabel: {
     fontSize: 10,
-    fontWeight: '600',
-    color: THEME.colors.primary,
+    fontWeight: '700',
+    color: THEME.colors.blue,
     marginTop: 3,
   },
 });

@@ -6,11 +6,14 @@ import {
   FlatList,
   TouchableOpacity,
   TextInput,
+  Linking,
+  Platform,
+  Share,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { THEME } from '../constants/theme';
 import { useApp } from '../context/AppContext';
-import { getFriendBadge, formatCurrency } from '../utils/helpers';
+import { getFriendBadge, formatCurrency, formatDate } from '../utils/helpers';
 
 export const FriendsScreen = () => {
   const { friends, items, addFriend, setSearchQuery, setCurrentScreen, setActiveFilter } = useApp();
@@ -28,36 +31,82 @@ export const FriendsScreen = () => {
 
   const sortedFriends = [...friends].sort((a, b) => b.score - a.score);
 
+  // Send full account statement to Friend via WhatsApp / Share Sheet
+  const handleSendStatement = async (friend, friendActiveItems, loanCount, debtSum) => {
+    let msg = `📋 *HELALLESH AGALAR EKSTRESİ*\n-----------------------------------\n👤 *Aga:* ${friend.name}\n⭐ *Karma Sicili:* ${friend.score}/100\n\n`;
+
+    if (loanCount > 0) {
+      msg += `📦 *Sende Olan Emanetler:*\n`;
+      friendActiveItems
+        .filter((it) => it.type === 'item')
+        .forEach((it) => {
+          msg += `• ${it.title} (Vade: ${formatDate(it.dueDate)})\n`;
+        });
+      msg += `\n`;
+    }
+
+    if (debtSum > 0) {
+      msg += `💰 *Ortak Hesap / Borç Payı:*\n`;
+      friendActiveItems
+        .filter((it) => it.type === 'debt')
+        .forEach((it) => {
+          msg += `• ${it.title}: ${formatCurrency(it.amount)}\n`;
+        });
+      msg += `*Toplam Alacak:* ${formatCurrency(debtSum)}\n\n`;
+    }
+
+    msg += `_Helallesh sistemi üzerinden oluşturulmuştur. Hak geçmesin, helalleşelim!_`;
+
+    const encoded = encodeURIComponent(msg);
+    const whatsappUrl = `whatsapp://send?text=${encoded}`;
+    const webUrl = `https://wa.me/?text=${encoded}`;
+
+    try {
+      if (Platform.OS === 'web') {
+        if (typeof window !== 'undefined') window.open(webUrl, '_blank');
+      } else {
+        const canOpen = await Linking.canOpenURL(whatsappUrl);
+        if (canOpen) {
+          await Linking.openURL(whatsappUrl);
+        } else {
+          await Linking.openURL(webUrl);
+        }
+      }
+    } catch (e) {
+      Share.share({ message: msg });
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <View>
-          <Text style={styles.headerTitle}>Kişiler & Güvenilirlik</Text>
-          <Text style={styles.headerSubtitle}>Emanet ve borç sadakat geçmişi</Text>
+          <Text style={styles.headerTitle}>Agalar Karnesi & Güven</Text>
+          <Text style={styles.headerSubtitle}>Kim ne kadar emanete sadık, kim çökücü?</Text>
         </View>
         <TouchableOpacity
           style={styles.addBtn}
           onPress={() => setShowAddModal(!showAddModal)}
         >
           <MaterialCommunityIcons name="plus" size={16} color="#FFFFFF" />
-          <Text style={styles.addBtnText}>Kişi Ekle</Text>
+          <Text style={styles.addBtnText}>Aga Ekle</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Add Friend Box */}
+      {/* Add Friend Form */}
       {showAddModal && (
         <View style={styles.addFormBox}>
-          <Text style={styles.addFormTitle}>Yeni Kişi Ekle</Text>
+          <Text style={styles.addFormTitle}>Yeni Aga Kaydet</Text>
           <TextInput
             style={styles.formInput}
-            placeholder="İsim Soyisim..."
+            placeholder="Aga adı (Örn: Caner, Mert)..."
             placeholderTextColor={THEME.colors.textMuted}
             value={name}
             onChangeText={setName}
           />
           <TextInput
             style={styles.formInput}
-            placeholder="Telefon (İsteğe bağlı)..."
+            placeholder="Telefon numarası (İsteğe bağlı)..."
             placeholderTextColor={THEME.colors.textMuted}
             keyboardType="phone-pad"
             value={phone}
@@ -97,58 +146,123 @@ export const FriendsScreen = () => {
             .filter((it) => it.type === 'debt')
             .reduce((acc, cur) => acc + (Number(cur.amount) || 0), 0);
 
+          const hasPending = loanCount > 0 || debtSum > 0;
+
           return (
             <View style={styles.card}>
               <View style={styles.cardMain}>
-                <View style={styles.avatarCircle}>
-                  <Text style={styles.avatarInitials}>
-                    {item.avatar.length <= 2 ? item.avatar : item.name.slice(0, 2).toUpperCase()}
+                <View
+                  style={[
+                    styles.avatarCircle,
+                    { backgroundColor: item.score >= 80 ? THEME.colors.blueBg : THEME.colors.dangerBg },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.avatarInitials,
+                      { color: item.score >= 80 ? THEME.colors.blue : THEME.colors.danger },
+                    ]}
+                  >
+                    {item.avatar && item.avatar.length <= 2
+                      ? item.avatar
+                      : item.name.slice(0, 2).toUpperCase()}
                   </Text>
                 </View>
 
                 <View style={styles.cardContent}>
                   <View style={styles.nameRow}>
                     <Text style={styles.personName}>{item.name}</Text>
-                    <View style={[styles.badge, { backgroundColor: badge.bg }]}>
+                    <View style={[styles.badge, { backgroundColor: badge.bg, borderColor: badge.border || 'transparent' }]}>
                       <Text style={[styles.badgeText, { color: badge.color }]}>{badge.title}</Text>
                     </View>
                   </View>
 
                   <View style={styles.metaRow}>
-                    <Text style={styles.metaText}>
-                      Emanet: <Text style={{ fontWeight: '600', color: THEME.colors.textPrimary }}>{loanCount > 0 ? `${loanCount} adet` : 'Yok'}</Text>
-                    </Text>
+                    <View style={styles.metaItem}>
+                      <Text style={styles.metaLabel}>Emanet:</Text>
+                      <Text style={[styles.metaVal, loanCount > 0 && { color: THEME.colors.blue }]}>
+                        {loanCount > 0 ? `${loanCount} adet` : 'Yok'}
+                      </Text>
+                    </View>
                     <Text style={styles.dot}>•</Text>
-                    <Text style={styles.metaText}>
-                      Borç: <Text style={{ fontWeight: '600', color: THEME.colors.textPrimary }}>{debtSum > 0 ? formatCurrency(debtSum) : 'Yok'}</Text>
-                    </Text>
+                    <View style={styles.metaItem}>
+                      <Text style={styles.metaLabel}>Alacak:</Text>
+                      <Text style={[styles.metaVal, debtSum > 0 && { color: THEME.colors.purple }]}>
+                        {debtSum > 0 ? formatCurrency(debtSum) : '0 ₺'}
+                      </Text>
+                    </View>
                   </View>
                 </View>
 
                 <View style={styles.scoreBox}>
-                  <Text style={styles.scoreVal}>{item.score}</Text>
-                  <Text style={styles.scoreLabel}>Puan</Text>
+                  <Text
+                    style={[
+                      styles.scoreVal,
+                      {
+                        color:
+                          item.score >= 80
+                            ? THEME.colors.success
+                            : item.score >= 50
+                            ? THEME.colors.warning
+                            : THEME.colors.danger,
+                      },
+                    ]}
+                  >
+                    {item.score}
+                  </Text>
+                  <Text style={styles.scoreLabel}>Karma</Text>
                 </View>
               </View>
 
-              {/* Progress bar */}
+              {/* Karma Progress Track */}
               <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: `${item.score}%`, backgroundColor: badge.color }]} />
+                <View
+                  style={[
+                    styles.progressFill,
+                    {
+                      width: `${item.score}%`,
+                      backgroundColor:
+                        item.score >= 80
+                          ? THEME.colors.success
+                          : item.score >= 50
+                          ? THEME.colors.warning
+                          : THEME.colors.danger,
+                    },
+                  ]}
+                />
               </View>
 
-              {(loanCount > 0 || debtSum > 0) && (
-                <TouchableOpacity
-                  style={styles.cardAction}
-                  onPress={() => {
-                    setSearchQuery(item.name);
-                    setActiveFilter('all');
-                    setCurrentScreen('dashboard');
-                  }}
-                >
-                  <Text style={styles.cardActionText}>Bekleyen kayıtları listele</Text>
-                  <MaterialCommunityIcons name="chevron-right" size={16} color={THEME.colors.textMuted} />
-                </TouchableOpacity>
-              )}
+              {/* Action Buttons: View Records & Send Statement via WhatsApp */}
+              <View style={styles.cardActionsRow}>
+                {hasPending ? (
+                  <>
+                    <TouchableOpacity
+                      style={styles.actionBtnSecondary}
+                      onPress={() => {
+                        setSearchQuery(item.name);
+                        setActiveFilter('all');
+                        setCurrentScreen('dashboard');
+                      }}
+                    >
+                      <MaterialCommunityIcons name="format-list-bulleted" size={14} color={THEME.colors.primary} />
+                      <Text style={styles.actionBtnSecondaryText}>Kayıtları Gör</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.actionBtnWhatsApp}
+                      onPress={() => handleSendStatement(item, friendActiveItems, loanCount, debtSum)}
+                    >
+                      <MaterialCommunityIcons name="whatsapp" size={14} color="#FFFFFF" />
+                      <Text style={styles.actionBtnWhatsAppText}>Ekstre Gönder</Text>
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <View style={styles.cleanRecordBox}>
+                    <MaterialCommunityIcons name="shield-check" size={14} color={THEME.colors.success} />
+                    <Text style={styles.cleanRecordText}>Tertemiz sicil • Bekleyen emanet yok</Text>
+                  </View>
+                )}
+              </View>
             </View>
           );
         }}
@@ -167,17 +281,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
+    paddingVertical: 14,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '800',
     color: THEME.colors.textPrimary,
   },
   headerSubtitle: {
     fontSize: 12,
     color: THEME.colors.textMuted,
-    marginTop: 1,
+    marginTop: 2,
   },
   addBtn: {
     flexDirection: 'row',
@@ -185,38 +299,37 @@ const styles = StyleSheet.create({
     gap: 4,
     backgroundColor: THEME.colors.primary,
     paddingHorizontal: 10,
-    paddingVertical: 7,
+    paddingVertical: 6,
     borderRadius: THEME.borderRadius.sm,
   },
   addBtnText: {
-    fontSize: 12,
-    fontWeight: '600',
     color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
   addFormBox: {
     backgroundColor: THEME.colors.surface,
-    padding: 12,
     borderRadius: THEME.borderRadius.md,
+    padding: 14,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: THEME.colors.border,
-    marginBottom: 12,
   },
   addFormTitle: {
     fontSize: 13,
     fontWeight: '700',
     color: THEME.colors.textPrimary,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   formInput: {
-    backgroundColor: THEME.colors.surfaceSubtle,
-    borderRadius: THEME.borderRadius.xs,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: 12,
-    color: THEME.colors.textPrimary,
-    marginBottom: 6,
+    backgroundColor: '#F8FAFC',
+    borderRadius: THEME.borderRadius.sm,
     borderWidth: 1,
     borderColor: THEME.colors.border,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 13,
+    marginBottom: 8,
   },
   addFormActions: {
     flexDirection: 'row',
@@ -225,54 +338,56 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   cancelBtn: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 6,
   },
   cancelBtnText: {
     fontSize: 12,
     color: THEME.colors.textMuted,
+    fontWeight: '600',
   },
   saveBtn: {
     backgroundColor: THEME.colors.primary,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 6,
-    borderRadius: THEME.borderRadius.xs,
+    borderRadius: THEME.borderRadius.sm,
   },
   saveBtnText: {
     fontSize: 12,
-    fontWeight: '600',
     color: '#FFFFFF',
+    fontWeight: '700',
   },
   listContent: {
-    paddingBottom: 24,
+    paddingBottom: 40,
   },
   card: {
     backgroundColor: THEME.colors.surface,
     borderRadius: THEME.borderRadius.md,
-    padding: 12,
+    padding: 14,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: THEME.colors.border,
-    marginBottom: 8,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   cardMain: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
   },
   avatarCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: THEME.colors.surfaceSubtle,
-    borderWidth: 1,
-    borderColor: THEME.colors.border,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
   },
   avatarInitials: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: THEME.colors.textPrimary,
+    fontSize: 15,
+    fontWeight: '800',
   },
   cardContent: {
     flex: 1,
@@ -281,10 +396,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    marginBottom: 4,
   },
   personName: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '800',
     color: THEME.colors.textPrimary,
   },
   badge: {
@@ -300,53 +416,100 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 3,
   },
-  metaText: {
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  metaLabel: {
     fontSize: 11,
     color: THEME.colors.textMuted,
   },
+  metaVal: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: THEME.colors.textPrimary,
+  },
   dot: {
     fontSize: 10,
-    color: THEME.colors.textMuted,
+    color: THEME.colors.textLight,
   },
   scoreBox: {
     alignItems: 'center',
-    paddingLeft: 10,
+    justifyContent: 'center',
+    minWidth: 42,
   },
   scoreVal: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: THEME.colors.textPrimary,
+    fontSize: 20,
+    fontWeight: '900',
+    letterSpacing: -0.5,
   },
   scoreLabel: {
     fontSize: 9,
     color: THEME.colors.textMuted,
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
   progressTrack: {
     height: 4,
+    backgroundColor: '#F1F5F9',
     borderRadius: 2,
-    backgroundColor: THEME.colors.surfaceSubtle,
-    overflow: 'hidden',
     marginTop: 10,
-    marginBottom: 4,
+    marginBottom: 10,
+    overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
     borderRadius: 2,
   },
-  cardAction: {
+  cardActionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 8,
-    marginTop: 6,
+    gap: 8,
     borderTopWidth: 1,
-    borderTopColor: THEME.colors.borderSubtle,
+    borderTopColor: '#F8FAFC',
+    paddingTop: 8,
   },
-  cardActionText: {
+  actionBtnSecondary: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: '#F1F5F9',
+    paddingVertical: 7,
+    borderRadius: THEME.borderRadius.sm,
+  },
+  actionBtnSecondaryText: {
     fontSize: 11,
-    color: THEME.colors.accent,
+    fontWeight: '700',
+    color: THEME.colors.textPrimary,
+  },
+  actionBtnWhatsApp: {
+    flex: 1.2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    backgroundColor: '#25D366',
+    paddingVertical: 7,
+    borderRadius: THEME.borderRadius.sm,
+  },
+  actionBtnWhatsAppText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  cleanRecordBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 3,
+  },
+  cleanRecordText: {
+    fontSize: 11,
+    color: THEME.colors.successDark,
     fontWeight: '600',
   },
 });

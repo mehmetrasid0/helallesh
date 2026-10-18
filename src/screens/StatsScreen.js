@@ -29,7 +29,7 @@ export const StatsScreen = () => {
         <View style={styles.metricsGrid}>
           <View style={styles.statBox}>
             <Text style={styles.statLabel}>Başarı Oranı</Text>
-            <Text style={styles.statNumber}>%{successRate}</Text>
+            <Text style={[styles.statNumber, { color: THEME.colors.blue }]}>%{successRate}</Text>
             <Text style={styles.statSub}>{stats.totalResolvedCount} / {totalRecords} kayıt kapandı</Text>
           </View>
 
@@ -44,7 +44,7 @@ export const StatsScreen = () => {
 
         {/* Highlighted Friends (Best & Risky) */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Güvenilirlik Dengesi</Text>
+          <Text style={styles.sectionTitle}>GÜVENİLİRLİK DENGESİ</Text>
 
           {bestFriend && (
             <View style={styles.personCard}>
@@ -61,11 +61,11 @@ export const StatsScreen = () => {
 
           {riskyFriend && (
             <View style={styles.personCard}>
-              <View style={[styles.iconSquare, { backgroundColor: THEME.colors.warningBg }]}>
-                <MaterialCommunityIcons name="alert-circle-outline" size={18} color={THEME.colors.warning} />
+              <View style={[styles.iconSquare, { backgroundColor: THEME.colors.dangerBg }]}>
+                <MaterialCommunityIcons name="alert-circle-outline" size={18} color={THEME.colors.danger} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.cardTag, { color: THEME.colors.warning }]}>Takip Gerektiren</Text>
+                <Text style={[styles.cardTag, { color: THEME.colors.danger }]}>Takip Gerektiren</Text>
                 <Text style={styles.cardName}>{riskyFriend.name}</Text>
                 <Text style={styles.cardScore}>Skor: {riskyFriend.score}/100 • İadeler gecikmeye yatkın</Text>
               </View>
@@ -75,7 +75,7 @@ export const StatsScreen = () => {
 
         {/* Insight Breakdown */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Kategoriye Göre İade Eğilimleri</Text>
+          <Text style={styles.sectionTitle}>KATEGORİYE GÖRE İADE EĞİLİMLERİ</Text>
           <View style={styles.insightCard}>
             <View style={styles.insightItem}>
               <View style={styles.insightHeader}>
@@ -93,36 +93,28 @@ export const StatsScreen = () => {
                 <Text style={styles.insightVal}>%65 geri dönüş</Text>
               </View>
               <View style={styles.track}>
-                <View style={[styles.fill, { width: '65%', backgroundColor: THEME.colors.accent }]} />
+                <View style={[styles.fill, { width: '65%', backgroundColor: THEME.colors.blue }]} />
               </View>
             </View>
 
             <View style={styles.insightItem}>
               <View style={styles.insightHeader}>
-                <Text style={styles.insightLabel}>Yemek & Taksi Payı</Text>
-                <Text style={styles.insightVal}>%80 geri dönüş</Text>
+                <Text style={styles.insightLabel}>Ortak Yemek & Adisyon</Text>
+                <Text style={styles.insightVal}>%85 geri dönüş</Text>
               </View>
               <View style={styles.track}>
-                <View style={[styles.fill, { width: '80%', backgroundColor: THEME.colors.success }]} />
+                <View style={[styles.fill, { width: '85%', backgroundColor: THEME.colors.purple }]} />
               </View>
             </View>
           </View>
         </View>
 
-        {/* Academic Project Info Box */}
+        {/* Academic Project Info Card */}
         <View style={styles.academicCard}>
-          <Text style={styles.academicHeader}>Proje Bilgileri</Text>
-          <Text style={styles.academicRow}>
-            • <Text style={styles.bold}>Uygulama:</Text> Helallesh (v1.0.0)
-          </Text>
-          <Text style={styles.academicRow}>
-            • <Text style={styles.bold}>Mimari:</Text> React Native, Context API, AsyncStorage
-          </Text>
-          <Text style={styles.academicRow}>
-            • <Text style={styles.bold}>Ders:</Text> Mobil Uygulama Geliştirme Final Projesi
-          </Text>
-          <Text style={styles.academicRow}>
-            • <Text style={styles.bold}>Hedef Kitle:</Text> Öğrenci evleri, kampüs ve arkadaş çevreleri
+          <Text style={styles.academicBadge}>MOBİL UYGULAMA GELİŞTİRME FİNAL PROJESİ</Text>
+          <Text style={styles.academicTitle}>Helallesh: Emanet ve Ortak Harcama Takip Sistemi</Text>
+          <Text style={styles.academicDesc}>
+            React Native & Expo mimarisiyle, merkezi durum yönetimi (Context API), kalıcı yerel veritabanı (AsyncStorage), kanıt görseli yönetimi (ImagePicker) ve kademeli tebligat motoru ile geliştirilmiştir.
           </Text>
         </View>
       </ScrollView>
@@ -137,25 +129,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: THEME.spacing.md,
   },
   headerRow: {
-    paddingVertical: 12,
+    paddingVertical: 14,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '800',
     color: THEME.colors.textPrimary,
   },
   headerSubtitle: {
     fontSize: 12,
     color: THEME.colors.textMuted,
-    marginTop: 1,
+    marginTop: 2,
   },
   scrollContent: {
-    paddingBottom: 24,
+    paddingBottom: 40,
   },
   metricsGrid: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 14,
+    marginBottom: 16,
   },
   statBox: {
     flex: 1,
@@ -164,65 +156,72 @@ const styles = StyleSheet.create({
     padding: 14,
     borderWidth: 1,
     borderColor: THEME.colors.border,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   statLabel: {
     fontSize: 11,
-    fontWeight: '600',
     color: THEME.colors.textMuted,
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
   statNumber: {
     fontSize: 22,
-    fontWeight: '800',
+    fontWeight: '900',
     color: THEME.colors.textPrimary,
-    marginVertical: 4,
     letterSpacing: -0.5,
+    marginVertical: 4,
   },
   statSub: {
     fontSize: 10,
     color: THEME.colors.textMuted,
+    fontWeight: '500',
   },
   section: {
-    marginBottom: 14,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: THEME.colors.textSecondary,
+    fontSize: 10,
+    fontWeight: '800',
+    color: THEME.colors.textMuted,
+    letterSpacing: 0.5,
     marginBottom: 8,
   },
   personCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
     backgroundColor: THEME.colors.surface,
     borderRadius: THEME.borderRadius.md,
     padding: 12,
+    marginBottom: 8,
     borderWidth: 1,
     borderColor: THEME.colors.border,
-    marginBottom: 8,
   },
   iconSquare: {
     width: 36,
     height: 36,
-    borderRadius: THEME.borderRadius.xs,
+    borderRadius: THEME.borderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardTag: {
     fontSize: 10,
     fontWeight: '700',
-    color: THEME.colors.success,
+    color: THEME.colors.successDark,
   },
   cardName: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
     color: THEME.colors.textPrimary,
-    marginTop: 1,
+    marginVertical: 1,
   },
   cardScore: {
     fontSize: 11,
     color: THEME.colors.textMuted,
-    marginTop: 1,
   },
   insightCard: {
     backgroundColor: THEME.colors.surface,
@@ -230,19 +229,20 @@ const styles = StyleSheet.create({
     padding: 14,
     borderWidth: 1,
     borderColor: THEME.colors.border,
+    gap: 12,
   },
   insightItem: {
-    marginBottom: 12,
+    gap: 4,
   },
   insightHeader: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
   },
   insightLabel: {
     fontSize: 12,
-    fontWeight: '500',
-    color: THEME.colors.textSecondary,
+    fontWeight: '700',
+    color: THEME.colors.textPrimary,
   },
   insightVal: {
     fontSize: 11,
@@ -250,37 +250,39 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   track: {
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: THEME.colors.surfaceSubtle,
+    height: 6,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 3,
     overflow: 'hidden',
   },
   fill: {
     height: '100%',
-    borderRadius: 2.5,
+    borderRadius: 3,
   },
   academicCard: {
-    backgroundColor: THEME.colors.surfaceSubtle,
+    backgroundColor: '#F8FAFC',
     borderRadius: THEME.borderRadius.md,
     padding: 14,
     borderWidth: 1,
     borderColor: THEME.colors.border,
-    marginTop: 4,
+    marginTop: 6,
   },
-  academicHeader: {
-    fontSize: 12,
-    fontWeight: '700',
+  academicBadge: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: THEME.colors.blue,
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  academicTitle: {
+    fontSize: 13,
+    fontWeight: '800',
     color: THEME.colors.textPrimary,
     marginBottom: 6,
   },
-  academicRow: {
+  academicDesc: {
     fontSize: 11,
     color: THEME.colors.textSecondary,
-    marginBottom: 3,
     lineHeight: 16,
-  },
-  bold: {
-    fontWeight: '700',
-    color: THEME.colors.textPrimary,
   },
 });

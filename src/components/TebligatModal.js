@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Platform, Linking, Share } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { THEME } from '../constants/theme';
 import { useApp } from '../context/AppContext';
@@ -26,11 +26,24 @@ export const TebligatModal = () => {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const handleOpenWhatsApp = () => {
+  const handleOpenWhatsApp = async () => {
     const encoded = encodeURIComponent(fullText);
-    const url = `https://wa.me/?text=${encoded}`;
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      window.open(url, '_blank');
+    const whatsappUrl = `whatsapp://send?text=${encoded}`;
+    const webUrl = `https://wa.me/?text=${encoded}`;
+
+    try {
+      if (Platform.OS === 'web') {
+        if (typeof window !== 'undefined') window.open(webUrl, '_blank');
+      } else {
+        const canOpen = await Linking.canOpenURL(whatsappUrl);
+        if (canOpen) {
+          await Linking.openURL(whatsappUrl);
+        } else {
+          await Linking.openURL(webUrl);
+        }
+      }
+    } catch (e) {
+      Share.share({ message: fullText });
     }
   };
 
