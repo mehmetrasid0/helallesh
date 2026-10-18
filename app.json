@@ -2,6 +2,7 @@
   "expo": {
     "name": "Helallesh",
     "slug": "helallesh",
+    "owner": "mehmetrasid0",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -22,7 +23,13 @@
     },
     "plugins": [
       "expo-asset",
-      "expo-font"
-    ]
+      "expo-font",
+      "expo-status-bar"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9bc99d64-a554-49f8-ab84-2c52ee52c760"
+      }
+    }
   }
 }
